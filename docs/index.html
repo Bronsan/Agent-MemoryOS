@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="Agent Memory OS — Self-hosted long-term memory infrastructure for LLMs and AI Agents. Hybrid retrieval, event sourcing, multi-tier storage.">
+<meta name="theme-color" content="#0f172a">
+<title>Agent Memory OS — Memory Infrastructure for AI Agents</title>
+<style>
+  :root {
+    --bg: #0f172a;
+    --bg2: #1e293b;
+    --bg3: #334155;
+    --text: #e2e8f0;
+    --text2: #94a3b8;
+    --accent: #38bdf8;
+    --accent2: #818cf8;
+    --green: #34d399;
+    --orange: #fb923c;
+    --red: #f87171;
+    --purple: #a78bfa;
+    --radius: 12px;
+    --max-w: 1100px;
+  }
+  *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+  html{scroll-behavior:smooth}
+  body{
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    background: var(--bg); color: var(--text); line-height: 1.7;
+    overflow-x: hidden;
+  }
+  a{color:var(--accent);text-decoration:none}
+  a:hover{text-decoration:underline}
+
+  /* ── Navigation ── */
+  nav{
+    position:fixed;top:0;left:0;right:0;z-index:100;
+    background:rgba(15,23,42,0.85);backdrop-filter:blur(12px);
+    border-bottom:1px solid rgba(255,255,255,0.06);
+    padding:0 24px;height:56px;
+    display:flex;align-items:center;justify-content:space-between;
+  }
+  nav .logo{font-weight:700;font-size:18px;color:var(--text)}
+  nav .logo span{color:var(--accent)}
+  nav .links{display:flex;gap:24px;font-size:14px}
+  nav .links a{color:var(--text2);transition:color .2s}
+  nav .links a:hover{color:var(--text);text-decoration:none}
+
+  /* ── Sections ── */
+  section{padding:80px 24px;max-width:var(--max-w);margin:0 auto}
+  .hero{padding-top:140px;text-align:center}
+  .hero h1{font-size:clamp(36px,6vw,64px);font-weight:800;line-height:1.15;margin-bottom:20px}
+  .hero h1 span{background:linear-gradient(135deg,var(--accent),var(--accent2));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+  .hero p{font-size:18px;color:var(--text2);max-width:600px;margin:0 auto 32px}
+  .hero .badges{display:flex;justify-content:center;gap:10px;flex-wrap:wrap;margin-bottom:32px}
+  .hero .badge{
+    background:var(--bg2);border:1px solid var(--bg3);border-radius:20px;
+    padding:6px 16px;font-size:13px;color:var(--text2);
+  }
+  .hero .cta{display:flex;gap:12px;justify-content:center;flex-wrap:wrap}
+  .btn{
+    display:inline-flex;align-items:center;gap:8px;
+    padding:12px 28px;border-radius:999px;font-size:15px;font-weight:600;
+    transition:all .2s;cursor:pointer;border:none;
+  }
+  .btn-primary{background:var(--accent);color:var(--bg)}
+  .btn-primary:hover{background:#7dd3fc;transform:translateY(-1px);box-shadow:0 4px 20px rgba(56,189,248,0.35)}
+  .btn-outline{background:transparent;color:var(--text);border:1px solid var(--bg3)}
+  .btn-outline:hover{border-color:var(--accent);color:var(--accent)}
+
+  /* ── Section Headers ── */
+  .section-label{
+    display:inline-block;font-size:12px;font-weight:600;letter-spacing:0.08em;
+    color:var(--accent);text-transform:uppercase;margin-bottom:12px;
+  }
+  h2{font-size:clamp(28px,4vw,40px);font-weight:700;margin-bottom:48px;text-align:center}
+  h3{font-size:20px;font-weight:600;margin-bottom:8px}
+
+  /* ── Feature Grid ── */
+  .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:24px}
+  .card{
+    background:var(--bg2);border:1px solid var(--bg3);border-radius:var(--radius);
+    padding:28px;transition:border-color .2s,transform .2s;
+  }
+  .card:hover{border-color:var(--accent);transform:translateY(-2px)}
+  .card .icon{font-size:28px;margin-bottom:12px}
+  .card h3{margin-bottom:8px}
+  .card p{color:var(--text2);font-size:15px}
+
+  /* ── Signal Table ── */
+  .table-wrap{overflow-x:auto;border-radius:var(--radius);border:1px solid var(--bg3)}
+  table{width:100%;border-collapse:collapse}
+  th,td{padding:14px 20px;text-align:left}
+  th{background:var(--bg2);font-size:12px;font-weight:600;letter-spacing:0.05em;color:var(--text2);text-transform:uppercase}
+  td{border-top:1px solid var(--bg3);font-size:15px}
+  .bar{display:inline-block;height:8px;border-radius:4px;background:var(--accent);vertical-align:middle;margin-right:8px}
+
+  /* ── Lifecycle Steps ── */
+  .steps{display:flex;gap:12px;flex-wrap:wrap;justify-content:center}
+  .step{
+    background:var(--bg2);border:1px solid var(--bg3);border-radius:var(--radius);
+    padding:20px 24px;text-align:center;flex:1;min-width:120px;max-width:160px;
+    position:relative;
+  }
+  .step .num{font-size:24px;font-weight:800;color:var(--accent);margin-bottom:4px}
+  .step .name{font-size:13px;font-weight:600}
+  .step .desc{font-size:11px;color:var(--text2);margin-top:4px}
+  .step-arrow{display:flex;align-items:center;color:var(--text2);font-size:20px}
+
+  /* ── Code Block ── */
+  .code-block{
+    background:#0c1222;border:1px solid var(--bg3);border-radius:var(--radius);
+    padding:24px;overflow-x:auto;font-family:"JetBrains Mono","Fira Code",monospace;
+    font-size:13px;line-height:1.6;position:relative;
+  }
+  .code-block .lang{
+    position:absolute;top:12px;right:16px;font-size:11px;color:var(--text2);text-transform:uppercase;
+  }
+  .code-block .kw{color:var(--purple)}
+  .code-block .str{color:var(--green)}
+  .code-block .fn{color:var(--accent)}
+  .code-block .cmt{color:var(--text2);font-style:italic}
+
+  /* ── Architecture ── */
+  .arch{display:flex;flex-direction:column;align-items:center;gap:8px}
+  .arch-box{
+    background:var(--bg2);border:1px solid var(--bg3);border-radius:var(--radius);
+    padding:14px 28px;text-align:center;font-size:14px;font-weight:600;
+  }
+  .arch-box.accent{border-color:var(--accent);background:rgba(56,189,248,0.08)}
+  .arch-row{display:flex;gap:12px;flex-wrap:wrap;justify-content:center}
+  .arch-line{color:var(--text2);font-size:20px}
+  .arch-sub{font-size:12px;color:var(--text2);font-weight:400;margin-top:2px}
+
+  /* ── Footer ── */
+  footer{
+    text-align:center;padding:60px 24px;border-top:1px solid var(--bg3);
+    color:var(--text2);font-size:14px;
+  }
+
+  /* ── Responsive ── */
+  @media(max-width:640px){
+    nav .links{display:none}
+    section{padding:60px 16px}
+    .hero{padding-top:100px}
+    .steps{flex-direction:column;align-items:center}
+    .step-arrow{transform:rotate(90deg)}
+  }
+</style>
+</head>
+<body>
+
+<!-- ── Nav ── -->
+<nav>
+  <div class="logo">🧠 Agent<span>Memory</span>OS</div>
+  <div class="links">
+    <a href="#features">Features</a>
+    <a href="#how-it-works">How It Works</a>
+    <a href="#api">API</a>
+    <a href="https://github.com/Bronsan/Agent-MemoryOS">GitHub</a>
+  </div>
+</nav>
+
+<!-- ── Hero ── -->
+<section class="hero">
+  <div class="badges">
+    <span class="badge">Go 1.22+</span>
+    <span class="badge">PostgreSQL + pgvector</span>
+    <span class="badge">Redis</span>
+    <span class="badge">MIT License</span>
+  </div>
+  <h1>Long-Term <span>Memory</span><br>for AI Agents</h1>
+  <p>A self-hosted, production-grade memory backend that gives LLMs persistent, searchable, and self-evolving memory — with hybrid retrieval, event sourcing, and a plugin ecosystem.</p>
+  <div class="cta">
+    <a class="btn btn-primary" href="https://github.com/Bronsan/Agent-MemoryOS">⭐ View on GitHub</a>
+    <a class="btn btn-outline" href="#quickstart">Quick Start →</a>
+  </div>
+</section>
+
+<!-- ── Architecture ── -->
+<section>
+  <div class="section-label">Architecture</div>
+  <h2>How It Works</h2>
+  <div class="arch">
+    <div class="arch-box">🤖 LLM / AI Agent</div>
+    <div class="arch-line">│</div>
+    <div class="arch-box">📦 Memory SDK (Go)</div>
+    <div class="arch-line">│</div>
+    <div class="arch-box accent">🌐 HTTP / gRPC API</div>
+    <div class="arch-line">│</div>
+    <div class="arch-box accent" style="padding:20px 40px">
+      ⚙️ <strong>Memory Core</strong>
+      <div class="arch-sub">Event Engine &nbsp;|&nbsp; Hybrid Retrieval &nbsp;|&nbsp; Plugin System</div>
+    </div>
+    <div class="arch-line">│</div>
+    <div class="arch-row">
+      <div class="arch-box" style="font-size:13px">⚡ Redis<br><span class="arch-sub">Hot Cache &lt;1ms</span></div>
+      <div class="arch-box" style="font-size:13px">💾 SQLite<br><span class="arch-sub">Session Cache &lt;5ms</span></div>
+      <div class="arch-box" style="font-size:13px">🐘 PostgreSQL<br><span class="arch-sub">Structured + pgvector &lt;50ms</span></div>
+    </div>
+    <div class="arch-line">│</div>
+    <div class="arch-box" style="font-size:13px">🗄 Object Storage<br><span class="arch-sub">Raw Payload</span></div>
+  </div>
+</section>
+
+<!-- ── Features ── -->
+<section id="features">
+  <div class="section-label">Features</div>
+  <h2>Why Agent Memory OS?</h2>
+  <div class="grid">
+    <div class="card">
+      <div class="icon">🔀</div>
+      <h3>Hybrid Retrieval</h3>
+      <p>Not just vector search. Fuses 5 signals: vector similarity, keyword match, knowledge graph traversal, time decay, and importance scoring — weighted and re-ranked by an LLM.</p>
+    </div>
+    <div class="card">
+      <div class="icon">📝</div>
+      <h3>Event Sourcing</h3>
+      <p>Every state change is an immutable event. Summaries, facts, and knowledge graphs are fully rebuildable from the event stream — no data loss, full audit trail.</p>
+    </div>
+    <div class="card">
+      <div class="icon">⚡</div>
+      <h3>Async Pipeline</h3>
+      <p>Write path returns in &lt;1ms. Background workers handle entity extraction, embedding generation, summarization, graph updates, and importance scoring.</p>
+    </div>
+    <div class="card">
+      <div class="icon">🔌</div>
+      <h3>Plugin Ecosystem</h3>
+      <p>Ingest from Discord, Telegram, QQ, WeChat, Slack, Email, GitHub, Obsidian, Notion, and more. Build custom plugins with a simple interface.</p>
+    </div>
+    <div class="card">
+      <div class="icon">🛡</div>
+      <h3>Security First</h3>
+      <p>Parameterized queries, JWT + API Key auth, rate limiting, OWASP security headers, panic recovery, error sanitization, and non-root containers.</p>
+    </div>
+    <div class="card">
+      <div class="icon">📦</div>
+      <h3>Go SDK</h3>
+      <p>First-class Go client: <code>client.Ingest()</code>, <code>client.Search()</code>, <code>client.GetMemory()</code>. Integrate memory into any Go agent in minutes.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ── Hybrid Search Signals ── -->
+<section id="how-it-works">
+  <div class="section-label">Hybrid Retrieval</div>
+  <h2>5 Signals, 1 Score</h2>
+  <p style="text-align:center;color:var(--text2);margin-bottom:32px;max-width:600px;margin-left:auto;margin-right:auto">
+    Each search result is scored by a weighted fusion of five independent retrieval signals.
+  </p>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Signal</th><th>Weight</th><th>How It Works</th></tr></thead>
+      <tbody>
+        <tr><td><span class="bar" style="width:90px;background:var(--accent)"></span> Vector Similarity</td><td><strong>30%</strong></td><td>Semantic meaning via pgvector cosine distance</td></tr>
+        <tr><td><span class="bar" style="width:75px;background:var(--purple)"></span> Keyword Match</td><td><strong>25%</strong></td><td>Full-text search via PostgreSQL tsvector + pg_trgm</td></tr>
+        <tr><td><span class="bar" style="width:60px;background:var(--green)"></span> Graph Traversal</td><td><strong>20%</strong></td><td>Entity-relationship proximity in knowledge graph</td></tr>
+        <tr><td><span class="bar" style="width:45px;background:var(--orange)"></span> Time Decay</td><td><strong>15%</strong></td><td>Recent and frequently-accessed memories rank higher</td></tr>
+        <tr><td><span class="bar" style="width:30px;background:var(--red)"></span> Importance</td><td><strong>10%</strong></td><td>LLM-assigned significance score (0.0–1.0)</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- ── Memory Lifecycle ── -->
+<section>
+  <div class="section-label">Memory Lifecycle</div>
+  <h2>From Raw Input to Archived Knowledge</h2>
+  <div class="steps">
+    <div class="step"><div class="num">0</div><div class="name">Raw Event</div><div class="desc">Unprocessed input</div></div>
+    <div class="step-arrow">→</div>
+    <div class="step"><div class="num">1</div><div class="name">Episode</div><div class="desc">Narrative summary</div></div>
+    <div class="step-arrow">→</div>
+    <div class="step"><div class="num">2</div><div class="name">Fact</div><div class="desc">Atomic statement</div></div>
+    <div class="step-arrow">→</div>
+    <div class="step"><div class="num">3</div><div class="name">Preference</div><div class="desc">User likes & choices</div></div>
+    <div class="step-arrow">→</div>
+    <div class="step"><div class="num">4</div><div class="name">Personality</div><div class="desc">Stable trait</div></div>
+    <div class="step-arrow">→</div>
+    <div class="step"><div class="num">5</div><div class="name">Knowledge</div><div class="desc">Cross-domain info</div></div>
+    <div class="step-arrow">→</div>
+    <div class="step"><div class="num">6</div><div class="name">Archive</div><div class="desc">Cold storage</div></div>
+  </div>
+</section>
+
+<!-- ── Quick Start ── -->
+<section id="quickstart">
+  <div class="section-label">Quick Start</div>
+  <h2>Get Running in 30 Seconds</h2>
+  <div class="code-block">
+    <span class="lang">Shell</span>
+    <span class="cmt"># Clone the repo</span><br>
+    <span class="fn">git</span> clone https://github.com/Bronsan/Agent-MemoryOS.git<br>
+    <span class="fn">cd</span> memory-core<br><br>
+    <span class="cmt"># Configure</span><br>
+    <span class="fn">cp</span> .env.example .env<br>
+    <span class="fn">openssl</span> rand -base64 64  <span class="cmt"># Generate JWT secret, paste into .env</span><br><br>
+    <span class="cmt"># One-command Docker setup (PostgreSQL + Redis + Memory Core)</span><br>
+    <span class="fn">make</span> docker-up<br><br>
+    <span class="cmt"># Verify</span><br>
+    <span class="fn">curl</span> http://localhost:8080/health<br>
+    <span class="str"># → {"status":"ok"}</span>
+  </div>
+</section>
+
+<!-- ── API Examples ── -->
+<section id="api">
+  <div class="section-label">API</div>
+  <h2>Ingest &amp; Search in Two Calls</h2>
+
+  <h3 style="margin-top:32px">📥 Ingest a Memory</h3>
+  <div class="code-block">
+    <span class="lang">cURL</span>
+    <span class="fn">curl</span> -X POST http://localhost:8080/api/v1/ingest \<br>
+    &nbsp;&nbsp;-H <span class="str">"Content-Type: application/json"</span> \<br>
+    &nbsp;&nbsp;-H <span class="str">"X-API-Key: mcos_your_key"</span> \<br>
+    &nbsp;&nbsp;-d <span class="str">'{<br>
+    &nbsp;&nbsp;&nbsp;&nbsp;"user_id": "550e8400-e29b-41d4-a716-446655440000",<br>
+    &nbsp;&nbsp;&nbsp;&nbsp;"text": "Today I discussed the Q3 roadmap with Alice.",<br>
+    &nbsp;&nbsp;&nbsp;&nbsp;"source": "web"<br>
+    &nbsp;&nbsp;}'</span><br><br>
+    <span class="cmt"># Response (201 Created)</span><br>
+    <span class="str">{"event_id":"a1b2...","memory_id":"e5f6...","status":"queued"}</span>
+  </div>
+
+  <h3 style="margin-top:32px">🔍 Hybrid Search</h3>
+  <div class="code-block">
+    <span class="lang">cURL</span>
+    <span class="fn">curl</span> -X POST http://localhost:8080/api/v1/search \<br>
+    &nbsp;&nbsp;-H <span class="str">"Content-Type: application/json"</span> \<br>
+    &nbsp;&nbsp;-H <span class="str">"X-API-Key: mcos_your_key"</span> \<br>
+    &nbsp;&nbsp;-d <span class="str">'{<br>
+    &nbsp;&nbsp;&nbsp;&nbsp;"user_id": "550e8400-e29b-41d4-a716-446655440000",<br>
+    &nbsp;&nbsp;&nbsp;&nbsp;"query": "Q3 roadmap Alice",<br>
+    &nbsp;&nbsp;&nbsp;&nbsp;"top_k": 5<br>
+    &nbsp;&nbsp;}'</span><br><br>
+    <span class="cmt"># Response (200 OK)</span><br>
+    <span class="str">{"results":[{"memory":{...},"score":0.872,"took_ms":12}]}</span>
+  </div>
+
+  <h3 style="margin-top:32px">💻 Go SDK</h3>
+  <div class="code-block">
+    <span class="lang">Go</span>
+    <span class="kw">import</span> <span class="str">"github.com/agent-memoryos/memory-core/sdk"</span><br><br>
+    client := sdk.<span class="fn">NewClient</span>(<span class="str">"http://localhost:8080"</span>, <span class="str">"mcos_your_key"</span>)<br><br>
+    <span class="cmt">// Ingest</span><br>
+    result, _ := client.<span class="fn">Ingest</span>(ctx, &sdk.IngestInput{<br>
+    &nbsp;&nbsp;UserID: <span class="str">"user-123"</span>,<br>
+    &nbsp;&nbsp;Text:   <span class="str">"Remember I prefer dark mode."</span>,<br>
+    &nbsp;&nbsp;Source: <span class="str">"agent"</span>,<br>
+    })<br><br>
+    <span class="cmt">// Search</span><br>
+    search, _ := client.<span class="fn">Search</span>(ctx, &sdk.SearchInput{<br>
+    &nbsp;&nbsp;UserID: <span class="str">"user-123"</span>,<br>
+    &nbsp;&nbsp;Query:  <span class="str">"dark mode preference"</span>,<br>
+    &nbsp;&nbsp;TopK:   5,<br>
+    })
+  </div>
+</section>
+
+<!-- ── Deploy ── -->
+<section>
+  <div class="section-label">Deploy</div>
+  <h2>Put It Online</h2>
+  <div class="grid">
+    <div class="card">
+      <div class="icon">🐳</div>
+      <h3>Docker Compose</h3>
+      <p><code>make docker-up</code> starts PostgreSQL (pgvector), Redis, and Memory Core together. Expose port 8080 behind nginx or a cloud load balancer.</p>
+    </div>
+    <div class="card">
+      <div class="icon">☁️</div>
+      <h3>Cloud VM</h3>
+      <p>Deploy to any VPS (AWS EC2, DigitalOcean, Hetzner). Add a domain, set up TLS with Let's Encrypt, and you're production-ready.</p>
+    </div>
+    <div class="card">
+      <div class="icon">📄</div>
+      <h3>GitHub Pages (This Site)</h3>
+      <p>This landing page lives in <code>/docs</code>. Enable GitHub Pages in repo Settings → Pages → Source: "Deploy from a branch" → <code>/docs</code>.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ── Footer ── -->
+<footer>
+  <p>🧠 Agent Memory OS — MIT License</p>
+  <p style="margin-top:8px">
+    <a href="https://github.com/Bronsan/Agent-MemoryOS">GitHub</a> &nbsp;·&nbsp;
+    <a href="README.md">English Docs</a> &nbsp;·&nbsp;
+    <a href="README_CN.md">中文文档</a>
+  </p>
+</footer>
+
+</body>
+</html>
