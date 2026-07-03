@@ -307,9 +307,12 @@ func (h *Handler) GetStats(w http.ResponseWriter, r *http.Request) {
 
 // Health returns service health status.
 func (h *Handler) Health(w http.ResponseWriter, r *http.Request) {
-	writeJSON(w, http.StatusOK, map[string]string{
-		"status":    "ok",
-		"timestamp": time.Now().UTC().Format(time.RFC3339),
+	writeJSON(w, http.StatusOK, map[string]interface{}{
+		"status":     "ok",
+		"version":    "2.0.0",
+		"timestamp":  time.Now().UTC().Format(time.RFC3339),
+		"postgresql": h.memoryStore != nil,
+		"api":        true,
 	})
 }
 
