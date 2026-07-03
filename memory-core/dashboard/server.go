@@ -83,22 +83,20 @@ func (s *Server) registerRoutes() {
 
 	fileServer := http.FileServer(http.FS(staticSub))
 
+	// Route: exact /admin → redirect to /admin/
 	s.mux.HandleFunc("/admin", func(w http.ResponseWriter, r *http.Request) {
-		// Redirect /admin to /admin/ so relative asset paths work
-		if r.URL.Path == "/admin" {
-			http.Redirect(w, r, "/admin/", http.StatusMovedPermanently)
-			return
-		}
-		// Serve the SPA: all /admin/* paths serve index.html except /admin/api/*
+		http.Redirect(w, r, "/admin/", http.StatusMovedPermanently)
+	})
+
+	// Route: /admin/* → SPA + API (Go 1.22 trailing slash matches subtree)
+	s.mux.HandleFunc("/admin/", func(w http.ResponseWriter, r *http.Request) {
+		// API routes take priority
 		if strings.HasPrefix(r.URL.Path, "/admin/api/") {
 			s.handleAPI(w, r)
 			return
 		}
-		// Remove /admin prefix for the file server
-		r.URL.Path = strings.TrimPrefix(r.URL.Path, "/admin")
-		if r.URL.Path == "" || r.URL.Path == "/" {
-			r.URL.Path = "/index.html"
-		}
+		// SPA: serve index.html for all non-API paths
+		r.URL.Path = "/index.html"
 		fileServer.ServeHTTP(w, r)
 	})
 }
@@ -149,70 +147,67 @@ func (s *Server) checkAuth(r *http.Request) bool {
 
 // --- Handlers ---
 
-// GET /admin/api/memories?user_id=&limit=20&offset=0&level=&search=
 func (s *Server) handleMemories(w http.ResponseWriter, r *http.Request) {
-	userID := r.URL.Query().Get("user_id")
-	limit := parseIntParam(r, "limit", 20)
-	offset := parseIntParam(r, "offset", 0)
-	search := r.URL.Query().Get("search")
-
-	if search != "" {
-		// Use retrieval engine for search
-		query := &types.SearchQuery{
-			UserID: userID,
-			Query:  search,
-			TopK:   limit,
-		}
-		results, err := s.retrievalEngine.Search(r.Context(), query)
-		if err != nil {
-			writeJSON(w, http.StatusInternalServerError, map[string]string{"error": err.Error()})
-			return
-		}
-		memories := make([]types.Memory, 0, len(results))
-		for _, res := range results {
-			memories = append(memories, res.Memory)
-		}
-		writeJSON(w, http.StatusOK, map[string]interface{}{
-			"memories": memories,
-			"total":    len(memories),
+	if s.memoryStore == nil {
+		writeJSON(w, http.StatusServiceUnavailable, map[string]interface{}{
+			"error":    "postgresql_not_connected",
+			"message":  "PostgreSQL is not connected. Memory features are unavailable.",
+			"memories": []interface{}{},
 		})
 		return
 	}
+	limit := 50
+	offset := 0
+	userID := r.URL.Query().Get("user_id")
+	search := r.URL.Query().Get("search")
+	level := r.URL.Query().Get("level")
 
-	filters := storage.SearchFilters{
-		UserID: userID,
-	}
-	if lvl := r.URL.Query().Get("level"); lvl != "" {
-		filters.Levels = []types.MemoryLevel{types.MemoryLevel(lvl)}
-	}
-
-	memories, err := s.memoryStore.ListByUser(r.Context(), userID, limit, offset, filters)
+	memories, err := s.memoryStore.ListByUser(r.Context(), userID, limit, offset, storage.SearchFilters{
+		Levels: []types.MemoryLevel{types.MemoryLevel(level)},
+	})
 	if err != nil {
-		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": err.Error()})
+		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "query failed"})
 		return
 	}
-
-	// Fallback: if no user-specific memories, return stub
-	writeJSON(w, http.StatusOK, map[string]interface{}{
-		"memories": memories,
-		"total":    len(memories),
-	})
+	if memories == nil {
+		memories = []*types.Memory{}
+	}
+	// Filter by search if provided
+	if search != "" {
+		filtered := make([]*types.Memory, 0)
+		for _, m := range memories {
+			if strings.Contains(strings.ToLower(m.Content), strings.ToLower(search)) {
+				filtered = append(filtered, m)
+			}
+		}
+		memories = filtered
+	}
+	writeJSON(w, http.StatusOK, map[string]interface{}{"memories": memories})
+	_ = search
 }
 
-// GET /admin/api/stats?user_id=
 func (s *Server) handleStats(w http.ResponseWriter, r *http.Request) {
-	userID := r.URL.Query().Get("user_id")
-
-	stats, err := s.memoryStore.GetStats(r.Context(), userID)
+	if s.memoryStore == nil {
+		writeJSON(w, http.StatusOK, map[string]interface{}{
+			"total_memories": 0,
+			"total_entities": 0,
+			"by_level":       map[string]int64{},
+		})
+		return
+	}
+	stats, err := s.memoryStore.GetStats(r.Context(), "")
 	if err != nil {
-		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": err.Error()})
+		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "stats failed"})
 		return
 	}
 	writeJSON(w, http.StatusOK, stats)
 }
 
-// GET /admin/api/plugins
 func (s *Server) handlePluginsList(w http.ResponseWriter, r *http.Request) {
+	if s.pluginRegistry == nil {
+		writeJSON(w, http.StatusOK, map[string]interface{}{"plugins": []interface{}{}})
+		return
+	}
 	names := s.pluginRegistry.List()
 	type pluginInfo struct {
 		Name    string `json:"name"`
@@ -220,166 +215,167 @@ func (s *Server) handlePluginsList(w http.ResponseWriter, r *http.Request) {
 		Healthy bool   `json:"healthy"`
 		Error   string `json:"error,omitempty"`
 	}
-
-	plugins := make([]pluginInfo, 0, len(names))
+	list := make([]pluginInfo, 0, len(names))
 	for _, name := range names {
-		p := s.pluginRegistry.Get(name)
-		info := pluginInfo{Name: name}
-		if p == nil {
-			info.Error = "not found"
-			plugins = append(plugins, info)
-			continue
+		p := pluginInfo{Name: name}
+		plug := s.pluginRegistry.Get(name)
+		if plug != nil {
+			err := plug.Health(r.Context())
+			if err != nil {
+				p.Error = err.Error()
+			} else {
+				p.Healthy = true
+				p.Running = true
+			}
 		}
-		if err := p.Health(r.Context()); err != nil {
-			info.Error = err.Error()
-		} else {
-			info.Healthy = true
-			info.Running = true
-		}
-		plugins = append(plugins, info)
+		list = append(list, p)
 	}
-	writeJSON(w, http.StatusOK, map[string]interface{}{
-		"plugins": plugins,
-	})
+	writeJSON(w, http.StatusOK, map[string]interface{}{"plugins": list})
 }
 
-// POST /admin/api/plugins/{name}/start or /stop
 func (s *Server) handlePluginAction(w http.ResponseWriter, r *http.Request, path string) {
-	// Parse: /plugins/{name}/{action}
+	if s.pluginRegistry == nil {
+		writeJSON(w, http.StatusServiceUnavailable, map[string]string{"error": "no plugin registry"})
+		return
+	}
+	// Path: /plugins/{name}/{action}
 	parts := strings.Split(strings.TrimPrefix(path, "/plugins/"), "/")
-	if len(parts) < 2 {
+	if len(parts) != 2 {
 		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "invalid path"})
 		return
 	}
-	name := parts[0]
-	action := parts[1]
-
+	name, action := parts[0], parts[1]
+	var err error
 	switch action {
 	case "start":
-		if err := s.pluginRegistry.Start(r.Context(), name); err != nil {
-			writeJSON(w, http.StatusInternalServerError, map[string]string{"error": err.Error()})
-			return
-		}
-		writeJSON(w, http.StatusOK, map[string]string{"status": "started", "name": name})
+		err = s.pluginRegistry.Start(r.Context(), name)
 	case "stop":
-		if err := s.pluginRegistry.Stop(name); err != nil {
-			writeJSON(w, http.StatusInternalServerError, map[string]string{"error": err.Error()})
-			return
-		}
-		writeJSON(w, http.StatusOK, map[string]string{"status": "stopped", "name": name})
+		err = s.pluginRegistry.Stop(name)
 	default:
-		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "unknown action: " + action})
+		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "unknown action"})
+		return
 	}
+	if err != nil {
+		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": err.Error()})
+		return
+	}
+	writeJSON(w, http.StatusOK, map[string]string{"status": "ok"})
 }
 
-// GET /admin/api/config
 func (s *Server) handleConfig(w http.ResponseWriter, r *http.Request) {
-	// Return sanitized config (no secrets)
-	sanitized := map[string]interface{}{
+	// Return sanitized config (strip secrets)
+	safe := map[string]interface{}{
 		"server": map[string]interface{}{
-			"http_port":      s.cfg.Server.HTTPPort,
-			"grpc_port":      s.cfg.Server.GRPCPort,
-			"read_timeout":   s.cfg.Server.ReadTimeout.String(),
-			"write_timeout":  s.cfg.Server.WriteTimeout.String(),
-			"enable_cors":    s.cfg.Server.EnableCORS,
-			"enable_metrics": s.cfg.Server.EnableMetrics,
-			"tls_enabled":    s.cfg.Server.TLS.Enabled,
+			"http_port": s.cfg.Server.HTTPPort,
+			"tls":       s.cfg.Server.TLS.Enabled,
 		},
 		"database": map[string]interface{}{
 			"host":     s.cfg.Database.Host,
 			"port":     s.cfg.Database.Port,
-			"user":     s.cfg.Database.User,
-			"db_name":  s.cfg.Database.DBName,
+			"dbname":   s.cfg.Database.DBName,
 			"ssl_mode": s.cfg.Database.SSLMode,
-			// password omitted
 		},
 		"redis": map[string]interface{}{
 			"host": s.cfg.Redis.Host,
 			"port": s.cfg.Redis.Port,
-			"db":   s.cfg.Redis.DB,
-			// password omitted
 		},
 		"embedding": map[string]interface{}{
-			"provider":   s.cfg.Embedding.Provider,
-			"model":      s.cfg.Embedding.Model,
-			"dimensions": s.cfg.Embedding.Dimensions,
-			// api_key omitted
+			"provider": s.cfg.Embedding.Provider,
+			"model":    s.cfg.Embedding.Model,
 		},
 		"llm": map[string]interface{}{
-			"provider":   s.cfg.LLM.Provider,
-			"model":      s.cfg.LLM.Model,
-			"max_tokens": s.cfg.LLM.MaxTokens,
-			// api_key omitted
-		},
-		"worker": map[string]interface{}{
-			"concurrency":  s.cfg.Worker.Concurrency,
-			"queue_size":   s.cfg.Worker.QueueSize,
-			"task_timeout": s.cfg.Worker.TaskTimeout.String(),
+			"provider": s.cfg.LLM.Provider,
+			"model":    s.cfg.LLM.Model,
 		},
 		"dashboard": map[string]interface{}{
 			"port": s.cfg.Dashboard.Port,
-			// username/password omitted
+		},
+		"worker": map[string]interface{}{
+			"concurrency": s.cfg.Worker.Concurrency,
 		},
 	}
-	writeJSON(w, http.StatusOK, sanitized)
+	writeJSON(w, http.StatusOK, safe)
 }
 
-// POST /admin/api/ingest
 func (s *Server) handleIngest(w http.ResponseWriter, r *http.Request) {
-	body, err := io.ReadAll(r.Body)
-	if err != nil {
-		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "read body: " + err.Error()})
+	if s.memoryStore == nil || s.eventEngine == nil {
+		writeJSON(w, http.StatusServiceUnavailable, map[string]string{
+			"error":   "postgresql_not_connected",
+			"message": "PostgreSQL is required for ingest. Please connect a database and restart.",
+		})
 		return
 	}
-	defer r.Body.Close()
-
 	var req struct {
 		UserID string `json:"user_id"`
 		Source string `json:"source"`
 		Text   string `json:"text"`
 	}
-	if err := json.Unmarshal(body, &req); err != nil {
-		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "invalid json: " + err.Error()})
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "invalid body"})
 		return
 	}
+	defer r.Body.Close()
+
 	if req.UserID == "" || req.Text == "" {
-		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "user_id and text are required"})
+		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "user_id and text required"})
 		return
 	}
-	if req.Source == "" {
-		req.Source = "dashboard"
+
+	memoryID := fmt.Sprintf("%d", time.Now().UnixNano())
+
+	payload := types.RawInputPayload{Text: req.Text, Format: "text"}
+	meta := types.EventMeta{
+		Source:    req.Source,
+		UserID:    req.UserID,
+		SessionID: "dashboard",
+	}
+	if meta.Source == "" {
+		meta.Source = "dashboard"
 	}
 
-	evt, err := plugins.IngestToEvent(r.Context(), s.eventEngine, req.UserID, "", "", req.Source, req.Text)
+	evt, err := s.eventEngine.Append(r.Context(), memoryID, types.AggregateMemory,
+		types.EventRawInput, payload, meta)
 	if err != nil {
-		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": err.Error()})
+		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "persist failed"})
 		return
 	}
 
-	writeJSON(w, http.StatusOK, map[string]interface{}{
-		"status":   "ingested",
-		"event_id": evt.ID,
-		"user_id":  req.UserID,
-		"source":   req.Source,
+	memory := &types.Memory{
+		ID:            memoryID,
+		UserID:        req.UserID,
+		Level:         types.LevelRawEvent,
+		Content:       req.Text,
+		Importance:    0.5,
+		DecayFactor:   1.0,
+		SourceEventID: evt.ID,
+		Metadata: types.MemoryMeta{
+			Source:    meta.Source,
+			SessionID: "dashboard",
+		},
+	}
+	if err := s.memoryStore.Create(r.Context(), memory); err != nil {
+		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "create failed"})
+		return
+	}
+
+	writeJSON(w, http.StatusCreated, map[string]string{
+		"event_id":  evt.ID,
+		"memory_id": memoryID,
+		"status":    "queued",
 	})
 }
 
 // --- Helpers ---
 
 func writeJSON(w http.ResponseWriter, status int, data interface{}) {
-	w.Header().Set("Content-Type", "application/json")
+	b, err := json.Marshal(data)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
 	w.WriteHeader(status)
-	json.NewEncoder(w).Encode(data)
-}
-
-func parseIntParam(r *http.Request, key string, defaultVal int) int {
-	v := r.URL.Query().Get(key)
-	if v == "" {
-		return defaultVal
-	}
-	var n int
-	if _, err := fmt.Sscanf(v, "%d", &n); err == nil {
-		return n
-	}
-	return defaultVal
+	w.Write(b)
+	_, _ = w.Write([]byte("\n"))
+	_ = err
+	_ = io.Discard
 }
