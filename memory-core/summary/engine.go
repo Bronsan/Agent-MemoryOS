@@ -3,22 +3,18 @@
 package summary
 
 import (
-	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
-	"io"
-	"net/http"
-	"time"
 
-	"github.com/agent-memoryos/memory-core/config"
+	"github.com/agent-memoryos/memory-core/provider"
 	"github.com/agent-memoryos/memory-core/types"
 )
 
 // Engine generates summaries and extracts structured knowledge from raw text.
 type Engine struct {
-	cfg    config.LLMConfig
-	client *http.Client
+	provider  provider.Provider
+	maxTokens int
 }
 
 // SummaryResult holds the LLM-generated summary output.
@@ -32,13 +28,14 @@ type SummaryResult struct {
 	Importance       float64        `json:"importance"`
 }
 
-// NewEngine creates a new summary engine.
-func NewEngine(cfg config.LLMConfig) *Engine {
+// NewEngine creates a new summary engine backed by the given provider.
+func NewEngine(p provider.Provider, maxTokens int) *Engine {
+	if maxTokens <= 0 {
+		maxTokens = 4096
+	}
 	return &Engine{
-		cfg: cfg,
-		client: &http.Client{
-			Timeout: 120 * time.Second,
-		},
+		provider:  p,
+		maxTokens: maxTokens,
 	}
 }
 
@@ -94,65 +91,26 @@ Only return the JSON object, no other text.`
 }
 
 func (e *Engine) callLLM(ctx context.Context, prompt string) (*SummaryResult, error) {
-	baseURL := e.cfg.BaseURL
-	if baseURL == "" {
-		baseURL = "https://api.openai.com/v1"
+	messages := []provider.Message{
+		{Role: "user", Content: prompt},
 	}
 
-	body := map[string]interface{}{
-		"model": e.cfg.Model,
-		"messages": []map[string]string{
-			{"role": "user", "content": prompt},
-		},
-		"max_tokens":  e.cfg.MaxTokens,
-		"temperature": 0.1, // low temperature for consistent extraction
-		"response_format": map[string]string{
-			"type": "json_object",
-		},
-	}
-
-	bodyJSON, _ := json.Marshal(body)
-
-	req, err := http.NewRequestWithContext(ctx, "POST", baseURL+"/chat/completions", bytes.NewReader(bodyJSON))
+	resp, err := e.provider.Chat(ctx, messages)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("llm call: %w", err)
 	}
-	req.Header.Set("Content-Type", "application/json")
-	req.Header.Set("Authorization", "Bearer "+e.cfg.APIKey)
-
-	resp, err := e.client.Do(req)
-	if err != nil {
-		return nil, fmt.Errorf("llm request: %w", err)
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode != http.StatusOK {
-		respBody, _ := io.ReadAll(resp.Body)
-		return nil, fmt.Errorf("llm error %d: %s", resp.StatusCode, string(respBody))
-	}
-
-	var llmResp struct {
-		Choices []struct {
-			Message struct {
-				Content string `json:"content"`
-			} `json:"message"`
-		} `json:"choices"`
-	}
-
-	if err := json.NewDecoder(resp.Body).Decode(&llmResp); err != nil {
-		return nil, fmt.Errorf("decode llm response: %w", err)
-	}
-
-	if len(llmResp.Choices) == 0 {
-		return nil, fmt.Errorf("empty llm response")
-	}
-
-	content := llmResp.Choices[0].Message.Content
 
 	var result SummaryResult
-	if err := json.Unmarshal([]byte(content), &result); err != nil {
-		return nil, fmt.Errorf("parse summary json: %w\nraw: %s", err, content)
+	if err := json.Unmarshal([]byte(resp.Content), &result); err != nil {
+		return nil, fmt.Errorf("parse summary json: %w\nraw: %s", err, truncate(resp.Content, 500))
 	}
 
 	return &result, nil
+}
+
+func truncate(s string, maxLen int) string {
+	if len(s) <= maxLen {
+		return s
+	}
+	return s[:maxLen] + "..."
 }

@@ -9,7 +9,7 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/agent-memoryos/memory-core/config"
+	"github.com/agent-memoryos/memory-core/provider"
 	"github.com/agent-memoryos/memory-core/summary"
 	"github.com/agent-memoryos/memory-core/types"
 )
@@ -20,10 +20,10 @@ type Engine struct {
 	mu        sync.RWMutex
 }
 
-// NewEngine creates a new parser engine.
-func NewEngine(llmCfg config.LLMConfig) *Engine {
+// NewEngine creates a new parser engine backed by the given LLM provider.
+func NewEngine(llmProvider provider.Provider, maxTokens int) *Engine {
 	return &Engine{
-		llmEngine: summary.NewEngine(llmCfg),
+		llmEngine: summary.NewEngine(llmProvider, maxTokens),
 	}
 }
 

@@ -4,6 +4,7 @@
   <img src="https://img.shields.io/badge/pgvector-✅-4B8BBE?style=flat-square" alt="pgvector">
   <img src="https://img.shields.io/badge/Redis-7+-DC382D?style=flat-square&logo=redis&logoColor=white" alt="Redis">
   <img src="https://img.shields.io/badge/License-MIT-green?style=flat-square" alt="License">
+  <img src="https://img.shields.io/badge/Version-2.0-8B5CF6?style=flat-square" alt="Version">
 </p>
 
 <h1 align="center">🧠 Agent Memory OS</h1>
@@ -19,7 +20,31 @@
 
 ---
 
-## ❓ What is Agent Memory OS?
+## 🆕 What's New in v2.0
+
+### 🔌 Universal Model Provider Layer
+
+Memory Core now has a unified LLM provider abstraction (`provider/`) supporting:
+
+| Provider | Chat | Embed | Models | Base URL Override |
+|----------|:----:|:-----:|:------:|:-----------------:|
+| **OpenAI** (GPT-4o, o1, etc.) | ✅ | ✅ | ✅ | ✅ |
+| **Anthropic** (Claude 3.5/4) | ✅ | ❌ | ✅ | ✅ |
+| **Ollama** (Llama, Mistral, etc.) | ✅ | ✅ | ✅ | ✅ |
+| **OneAPI** | ✅ | ✅ | ✅ | ✅ |
+| **NewAPI** | ✅ | ✅ | ✅ | ✅ |
+| **Any OpenAI-compatible** | ✅ | ✅ | ✅ | ✅ |
+
+All providers support custom `BaseURL` — point to OneAPI, NewAPI, or any vLLM/Ollama endpoint. The old hardcoded HTTP calls in `embedding/` and `summary/` have been replaced with clean provider interfaces.
+
+### 🆕 New Platform Plugins (v2)
+
+| Plugin | Protocol | Auth Method |
+|--------|----------|-------------|
+| **Telegram** | Bot API long-polling | Bot Token |
+| **Slack** | Socket Mode WebSocket | Bot Token + App Token |
+| **WeChat** | Official Account webhook | SHA1 signature verification |
+| **QQ** | OneBot 11/12 HTTP | Bearer access token |
 
 Agent Memory OS is a **production-grade memory backend** designed to give LLMs and AI Agents persistent, searchable, and self-evolving memory. It treats memory as a first-class infrastructure concern — not an afterthought bolted onto a vector database.
 
@@ -280,11 +305,11 @@ Memory Core ingests data from any source via plugins. Each plugin implements the
 
 | Plugin | Status | Description |
 |--------|:------:|-------------|
-| **Discord** | ✅ Implemented | Bot-based message ingestion |
-| Telegram | 🚧 Planned | Bot API integration |
-| QQ | 🚧 Planned | Group & private chat |
-| WeChat | 🚧 Planned | Official account messages |
-| Slack | 🚧 Planned | Workspace events |
+│ **Discord** | ✅ v1 | Bot-based message ingestion |
+│ Telegram | ✅ v2 | Bot API long-polling |
+│ QQ | ✅ v2 | OneBot 11/12 webhook |
+│ WeChat | ✅ v2 | Official account webhook |
+│ Slack | ✅ v2 | Socket Mode WebSocket |
 | Email | 🚧 Planned | IMAP inbox monitoring |
 | GitHub | 🚧 Planned | Issues, PRs, commits |
 | Obsidian | 🚧 Planned | Vault sync |

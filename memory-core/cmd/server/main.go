@@ -17,6 +17,7 @@ import (
 	"github.com/agent-memoryos/memory-core/embedding"
 	"github.com/agent-memoryos/memory-core/event"
 	"github.com/agent-memoryos/memory-core/graph"
+	"github.com/agent-memoryos/memory-core/provider"
 	"github.com/agent-memoryos/memory-core/retrieval"
 	"github.com/agent-memoryos/memory-core/storage"
 	"github.com/jmoiron/sqlx"
@@ -74,8 +75,12 @@ func main() {
 	// Event Sourcing engine
 	eventEngine := event.NewEngine(postgres)
 
-	// Embedding engine
-	embEngine := embedding.NewEngine(cfg.Embedding)
+	// Embedding engine — resolved via provider registry
+	embProvider, err := provider.DefaultRegistry.NewFromEmbeddingConfig(cfg.Embedding)
+	if err != nil {
+		log.Fatalf("Failed to create embedding provider: %v", err)
+	}
+	embEngine := embedding.NewEngine(embProvider, cfg.Embedding.Dimensions, cfg.Embedding.BatchSize)
 
 	// Knowledge Graph engine (wraps PostgreSQL with sqlx)
 	sqlxDB := sqlx.NewDb(postgres.DB(), "postgres")

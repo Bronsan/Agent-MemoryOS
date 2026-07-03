@@ -4,6 +4,7 @@
   <img src="https://img.shields.io/badge/pgvector-✅-4B8BBE?style=flat-square" alt="pgvector">
   <img src="https://img.shields.io/badge/Redis-7+-DC382D?style=flat-square&logo=redis&logoColor=white" alt="Redis">
   <img src="https://img.shields.io/badge/License-MIT-green?style=flat-square" alt="License">
+  <img src="https://img.shields.io/badge/Version-2.0-8B5CF6?style=flat-square" alt="Version">
 </p>
 
 <h1 align="center">🧠 Agent Memory OS</h1>
@@ -16,6 +17,34 @@
   <a href="#api-文档">📡 API</a> &nbsp;|&nbsp;
   <a href="#sdk-使用">💻 SDK</a>
 </p>
+
+---
+
+## 🆕 v2.0 更新内容
+
+### 🔌 统一模型供应商层
+
+Memory Core 新增了统一的 LLM provider 抽象层（`provider/`），支持：
+
+| 供应商 | 对话 | 嵌入 | 模型列表 | 自定义 BaseURL |
+|----------|:----:|:-----:|:------:|:-----------------:|
+| **OpenAI** (GPT-4o, o1 等) | ✅ | ✅ | ✅ | ✅ |
+| **Anthropic** (Claude 3.5/4) | ✅ | ❌ | ✅ | ✅ |
+| **Ollama** (Llama, Mistral 等) | ✅ | ✅ | ✅ | ✅ |
+| **OneAPI** | ✅ | ✅ | ✅ | ✅ |
+| **NewAPI** | ✅ | ✅ | ✅ | ✅ |
+| **任意 OpenAI 兼容** | ✅ | ✅ | ✅ | ✅ |
+
+所有供应商支持自定义 `BaseURL`——可指向 OneAPI、NewAPI 或任意 vLLM/Ollama 端点。原有的 `embedding/` 和 `summary/` 中硬编码的 HTTP 调用已替换为干净的 provider 接口。
+
+### 🆕 新增平台插件 (v2)
+
+| 插件 | 协议 | 认证方式 |
+|--------|----------|-------------|
+| **Telegram** | Bot API 长轮询 | Bot Token |
+| **Slack** | Socket Mode WebSocket | Bot Token + App Token |
+| **微信** | 公众号 webhook | SHA1 签名校验 |
+| **QQ** | OneBot 11/12 HTTP | Bearer access token |
 
 ---
 
