@@ -1,14 +1,14 @@
 <!doctype html>
-<html lang="en">
+<html lang="zh-CN">
     <head>
         <meta charset="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
         <meta
             name="description"
-            content="Agent Memory OS — Self-hosted long-term memory infrastructure for LLMs and AI Agents. Hybrid retrieval, event sourcing, multi-tier storage."
+            content="Agent Memory OS — 面向 LLM 与 AI Agent 的自托管长期记忆基础设施"
         />
         <meta name="theme-color" content="#0f172a" />
-        <title>Agent Memory OS — Memory Infrastructure for AI Agents</title>
+        <title>Agent Memory OS — AI Agent 长期记忆基础设施</title>
         <style>
             :root {
                 --bg: #0f172a;
@@ -52,7 +52,6 @@
                 text-decoration: underline;
             }
 
-            /* ── Navigation ── */
             nav {
                 position: fixed;
                 top: 0;
@@ -62,35 +61,95 @@
                 background: rgba(15, 23, 42, 0.85);
                 backdrop-filter: blur(12px);
                 border-bottom: 1px solid rgba(255, 255, 255, 0.06);
-                padding: 0 24px;
                 height: 56px;
                 display: flex;
                 align-items: center;
-                justify-content: space-between;
+                padding: 0 24px;
+            }
+            nav .nav-left {
+                display: flex;
+                align-items: center;
+                gap: 32px;
+                flex: 1;
             }
             nav .logo {
                 font-weight: 700;
                 font-size: 18px;
                 color: var(--text);
+                white-space: nowrap;
             }
             nav .logo span {
                 color: var(--accent);
             }
             nav .links {
                 display: flex;
-                gap: 24px;
+                gap: 20px;
                 font-size: 14px;
             }
             nav .links a {
                 color: var(--text2);
                 transition: color 0.2s;
+                white-space: nowrap;
             }
             nav .links a:hover {
                 color: var(--text);
                 text-decoration: none;
             }
+            nav .lang-switch {
+                position: relative;
+            }
+            .lang-btn {
+                background: var(--bg2);
+                border: 1px solid var(--bg3);
+                border-radius: 8px;
+                color: var(--text);
+                padding: 6px 12px;
+                font-size: 13px;
+                cursor: pointer;
+                display: flex;
+                align-items: center;
+                gap: 6px;
+                transition: border-color 0.2s;
+            }
+            .lang-btn:hover {
+                border-color: var(--accent);
+            }
+            .lang-dropdown {
+                position: absolute;
+                right: 0;
+                top: 100%;
+                margin-top: 4px;
+                background: var(--bg2);
+                border: 1px solid var(--bg3);
+                border-radius: 8px;
+                overflow: hidden;
+                display: none;
+                min-width: 140px;
+                z-index: 200;
+            }
+            .lang-dropdown.show {
+                display: block;
+            }
+            .lang-dropdown button {
+                display: block;
+                width: 100%;
+                padding: 10px 16px;
+                background: none;
+                border: none;
+                color: var(--text);
+                font-size: 13px;
+                text-align: left;
+                cursor: pointer;
+                transition: background 0.2s;
+            }
+            .lang-dropdown button:hover {
+                background: var(--bg3);
+            }
+            .lang-dropdown button.active {
+                color: var(--accent);
+                font-weight: 600;
+            }
 
-            /* ── Sections ── */
             section {
                 padding: 80px 24px;
                 max-width: var(--max-w);
@@ -173,7 +232,6 @@
                 color: var(--accent);
             }
 
-            /* ── Section Headers ── */
             .section-label {
                 display: inline-block;
                 font-size: 12px;
@@ -195,7 +253,6 @@
                 margin-bottom: 8px;
             }
 
-            /* ── Feature Grid ── */
             .grid {
                 display: grid;
                 grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
@@ -218,15 +275,11 @@
                 font-size: 28px;
                 margin-bottom: 12px;
             }
-            .card h3 {
-                margin-bottom: 8px;
-            }
             .card p {
                 color: var(--text2);
                 font-size: 15px;
             }
 
-            /* ── Signal Table ── */
             .table-wrap {
                 overflow-x: auto;
                 border-radius: var(--radius);
@@ -262,7 +315,6 @@
                 margin-right: 8px;
             }
 
-            /* ── Lifecycle Steps ── */
             .steps {
                 display: flex;
                 gap: 12px;
@@ -276,9 +328,8 @@
                 padding: 20px 24px;
                 text-align: center;
                 flex: 1;
-                min-width: 120px;
-                max-width: 160px;
-                position: relative;
+                min-width: 100px;
+                max-width: 150px;
             }
             .step .num {
                 font-size: 24px;
@@ -302,12 +353,11 @@
                 font-size: 20px;
             }
 
-            /* ── Code Block ── */
             .code-block {
                 background: #0c1222;
                 border: 1px solid var(--bg3);
                 border-radius: var(--radius);
-                padding: 24px;
+                padding: 24px 24px 24px 48px;
                 overflow-x: auto;
                 font-family: "JetBrains Mono", "Fira Code", monospace;
                 font-size: 13px;
@@ -335,8 +385,13 @@
                 color: var(--text2);
                 font-style: italic;
             }
+            .code-block .prompt {
+                position: absolute;
+                left: 16px;
+                color: var(--text2);
+                user-select: none;
+            }
 
-            /* ── Architecture ── */
             .arch {
                 display: flex;
                 flex-direction: column;
@@ -373,7 +428,6 @@
                 margin-top: 2px;
             }
 
-            /* ── Footer ── */
             footer {
                 text-align: center;
                 padding: 60px 24px;
@@ -381,8 +435,10 @@
                 color: var(--text2);
                 font-size: 14px;
             }
+            footer a {
+                color: var(--accent);
+            }
 
-            /* ── Responsive ── */
             @media (max-width: 640px) {
                 nav .links {
                     display: none;
@@ -404,45 +460,75 @@
         </style>
     </head>
     <body>
-        <!-- ── Nav ── -->
         <nav>
-            <div class="logo">🧠 Agent<span>Memory</span>OS</div>
-            <div class="links">
-                <a href="#features">Features</a>
-                <a href="#how-it-works">How It Works</a>
-                <a href="#api">API</a>
-                <a href="https://github.com/Bronsan/Agent-MemoryOS">GitHub</a>
+            <div class="nav-left">
+                <div class="logo">🧠 Agent<span>Memory</span>OS</div>
+                <div class="links">
+                    <a href="#features" data-i18n="nav.features">功能特性</a>
+                    <a href="#architecture" data-i18n="nav.architecture"
+                        >架构设计</a
+                    >
+                    <a href="#api" data-i18n="nav.api">API</a>
+                    <a href="https://github.com/Bronsan/Agent-MemoryOS"
+                        >GitHub</a
+                    >
+                </div>
+            </div>
+            <div class="lang-switch">
+                <button class="lang-btn" id="langBtn" onclick="toggleLang()">
+                    <span id="langFlag">🇨🇳</span>
+                    <span id="langLabel">中文</span> ▾
+                </button>
+                <div class="lang-dropdown" id="langDropdown">
+                    <button onclick="setLang('zh-CN')" data-lang="zh-CN">
+                        🇨🇳 简体中文
+                    </button>
+                    <button onclick="setLang('en')" data-lang="en">
+                        🇺🇸 English
+                    </button>
+                    <button onclick="setLang('ja')" data-lang="ja">
+                        🇯🇵 日本語
+                    </button>
+                </div>
             </div>
         </nav>
 
-        <!-- ── Hero ── -->
+        <!-- HERO -->
         <section class="hero">
             <div class="badges">
+                <span class="badge">🔥 v2.0</span>
                 <span class="badge">Go 1.22+</span>
                 <span class="badge">PostgreSQL + pgvector</span>
-                <span class="badge">Redis</span>
+                <span class="badge">OpenAI · Anthropic · OneAPI</span>
                 <span class="badge">MIT License</span>
             </div>
-            <h1>Long-Term <span>Memory</span><br />for AI Agents</h1>
-            <p>
-                A self-hosted, production-grade memory backend that gives LLMs
-                persistent, searchable, and self-evolving memory — with hybrid
-                retrieval, event sourcing, and a plugin ecosystem.
+            <h1 data-i18n="hero.title">
+                为 AI Agent 打造的<span>长期记忆</span>
+            </h1>
+            <p data-i18n="hero.subtitle">
+                一个自托管的、生产级的记忆后端，为 LLM
+                提供持久化、可搜索、自我演化的记忆能力——集成混合检索、事件溯源和插件生态。
             </p>
             <div class="cta">
                 <a
                     class="btn btn-primary"
                     href="https://github.com/Bronsan/Agent-MemoryOS"
-                    >⭐ View on GitHub</a
+                    data-i18n="hero.cta_github"
+                    >⭐ 在 GitHub 上查看</a
                 >
-                <a class="btn btn-outline" href="#quickstart">Quick Start →</a>
+                <a
+                    class="btn btn-outline"
+                    href="#quickstart"
+                    data-i18n="hero.cta_start"
+                    >快速开始 →</a
+                >
             </div>
         </section>
 
-        <!-- ── Architecture ── -->
-        <section>
-            <div class="section-label">Architecture</div>
-            <h2>How It Works</h2>
+        <!-- ARCHITECTURE -->
+        <section id="architecture">
+            <div class="section-label" data-i18n="arch.label">架构设计</div>
+            <h2 data-i18n="arch.title">系统架构</h2>
             <div class="arch">
                 <div class="arch-box">🤖 LLM / AI Agent</div>
                 <div class="arch-line">│</div>
@@ -452,126 +538,116 @@
                 <div class="arch-line">│</div>
                 <div class="arch-box accent" style="padding: 20px 40px">
                     ⚙️ <strong>Memory Core</strong>
-                    <div class="arch-sub">
-                        Event Engine &nbsp;|&nbsp; Hybrid Retrieval
-                        &nbsp;|&nbsp; Plugin System
+                    <div class="arch-sub" data-i18n="arch.core_sub">
+                        事件引擎 | 混合检索 | 插件系统
                     </div>
                 </div>
                 <div class="arch-line">│</div>
                 <div class="arch-row">
                     <div class="arch-box" style="font-size: 13px">
                         ⚡ Redis<br /><span class="arch-sub"
-                            >Hot Cache &lt;1ms</span
+                            >热缓存 &lt;1ms</span
                         >
                     </div>
                     <div class="arch-box" style="font-size: 13px">
                         💾 SQLite<br /><span class="arch-sub"
-                            >Session Cache &lt;5ms</span
+                            >会话缓存 &lt;5ms</span
                         >
                     </div>
                     <div class="arch-box" style="font-size: 13px">
                         🐘 PostgreSQL<br /><span class="arch-sub"
-                            >Structured + pgvector &lt;50ms</span
+                            >结构化 + pgvector &lt;50ms</span
                         >
                     </div>
                 </div>
                 <div class="arch-line">│</div>
                 <div class="arch-box" style="font-size: 13px">
-                    🗄 Object Storage<br /><span class="arch-sub"
-                        >Raw Payload</span
-                    >
+                    🗄 对象存储<br /><span class="arch-sub">原始载荷</span>
                 </div>
             </div>
         </section>
 
-        <!-- ── Features ── -->
+        <!-- FEATURES -->
         <section id="features">
-            <div class="section-label">Features</div>
-            <h2>Why Agent Memory OS?</h2>
+            <div class="section-label" data-i18n="feat.label">核心特性</div>
+            <h2 data-i18n="feat.title">为什么选择 Agent Memory OS？</h2>
             <div class="grid">
                 <div class="card">
                     <div class="icon">🔀</div>
-                    <h3>Hybrid Retrieval</h3>
-                    <p>
-                        Not just vector search. Fuses 5 signals: vector
-                        similarity, keyword match, knowledge graph traversal,
-                        time decay, and importance scoring — weighted and
-                        re-ranked by an LLM.
+                    <h3 data-i18n="feat.hybrid_title">混合检索</h3>
+                    <p data-i18n="feat.hybrid_desc">
+                        不止是向量搜索。融合 5
+                        种信号：向量相似度、关键词匹配、知识图谱遍历、时间衰减和重要性评分——加权并由
+                        LLM 重排序。
                     </p>
                 </div>
                 <div class="card">
                     <div class="icon">📝</div>
-                    <h3>Event Sourcing</h3>
-                    <p>
-                        Every state change is an immutable event. Summaries,
-                        facts, and knowledge graphs are fully rebuildable from
-                        the event stream — no data loss, full audit trail.
+                    <h3 data-i18n="feat.event_title">事件溯源</h3>
+                    <p data-i18n="feat.event_desc">
+                        每一次状态变更都是不可变的事件。摘要、事实和知识图谱可完全从事件流重建——零数据丢失，完整的审计追踪。
                     </p>
                 </div>
                 <div class="card">
                     <div class="icon">⚡</div>
-                    <h3>Async Pipeline</h3>
-                    <p>
-                        Write path returns in &lt;1ms. Background workers handle
-                        entity extraction, embedding generation, summarization,
-                        graph updates, and importance scoring.
+                    <h3 data-i18n="feat.async_title">异步流水线</h3>
+                    <p data-i18n="feat.async_desc">
+                        写入路径延迟
+                        &lt;1ms。后台工作线程处理实体提取、向量嵌入、摘要生成、图谱更新和重要性评分。
                     </p>
                 </div>
                 <div class="card">
                     <div class="icon">🔌</div>
-                    <h3>Plugin Ecosystem</h3>
-                    <p>
-                        Ingest from Discord, Telegram, QQ, WeChat, Slack, Email,
-                        GitHub, Obsidian, Notion, and more. Build custom plugins
-                        with a simple interface.
+                    <h3 data-i18n="feat.plugin_title">插件生态</h3>
+                    <p data-i18n="feat.plugin_desc">
+                        从
+                        Discord、Telegram、QQ、微信、Slack、邮件、GitHub、Obsidian、Notion
+                        等平台采集数据。用简单接口构建自定义插件。
                     </p>
                 </div>
                 <div class="card">
                     <div class="icon">🛡</div>
-                    <h3>Security First</h3>
-                    <p>
-                        Parameterized queries, JWT + API Key auth, rate
-                        limiting, OWASP security headers, panic recovery, error
-                        sanitization, and non-root containers.
+                    <h3 data-i18n="feat.sec_title">安全优先</h3>
+                    <p data-i18n="feat.sec_desc">
+                        参数化查询、JWT + API Key 认证、频率限制、OWASP
+                        安全头、Panic 恢复、错误脱敏、非 root 容器。
                     </p>
                 </div>
                 <div class="card">
                     <div class="icon">📦</div>
-                    <h3>Go SDK</h3>
-                    <p>
-                        First-class Go client: <code>client.Ingest()</code>,
-                        <code>client.Search()</code>,
-                        <code>client.GetMemory()</code>. Integrate memory into
-                        any Go agent in minutes.
+                    <h3 data-i18n="feat.sdk_title">Go SDK</h3>
+                    <p data-i18n="feat.sdk_desc">
+                        一流的 Go
+                        客户端：<code>client.Ingest()</code>、<code>client.Search()</code>、<code>client.GetMemory()</code>。几分钟内即可将记忆集成到任何
+                        Go Agent 中。
                     </p>
                 </div>
             </div>
         </section>
 
-        <!-- ── Hybrid Search Signals ── -->
+        <!-- HYBRID RETRIEVAL -->
         <section id="how-it-works">
-            <div class="section-label">Hybrid Retrieval</div>
-            <h2>5 Signals, 1 Score</h2>
+            <div class="section-label" data-i18n="hybrid.label">混合检索</div>
+            <h2 data-i18n="hybrid.title">5 种信号，1 个分数</h2>
             <p
                 style="
                     text-align: center;
                     color: var(--text2);
                     margin-bottom: 32px;
                     max-width: 600px;
-                    margin-left: auto;
-                    margin-right: auto;
+                    margin-inline: auto;
                 "
+                data-i18n="hybrid.subtitle"
             >
-                Each search result is scored by a weighted fusion of five
-                independent retrieval signals.
+                每个搜索结果通过五种独立检索信号的加权融合进行评分。
             </p>
             <div class="table-wrap">
                 <table>
                     <thead>
                         <tr>
-                            <th>Signal</th>
-                            <th>Weight</th>
-                            <th>How It Works</th>
+                            <th data-i18n="hybrid.col_signal">信号</th>
+                            <th data-i18n="hybrid.col_weight">权重</th>
+                            <th data-i18n="hybrid.col_desc">工作原理</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -584,11 +660,11 @@
                                         background: var(--accent);
                                     "
                                 ></span>
-                                Vector Similarity
+                                <span data-i18n="hybrid.vec">向量相似度</span>
                             </td>
                             <td><strong>30%</strong></td>
-                            <td>
-                                Semantic meaning via pgvector cosine distance
+                            <td data-i18n="hybrid.vec_desc">
+                                通过 pgvector 余弦距离计算语义
                             </td>
                         </tr>
                         <tr>
@@ -600,12 +676,11 @@
                                         background: var(--purple);
                                     "
                                 ></span>
-                                Keyword Match
+                                <span data-i18n="hybrid.kw">关键词匹配</span>
                             </td>
                             <td><strong>25%</strong></td>
-                            <td>
-                                Full-text search via PostgreSQL tsvector +
-                                pg_trgm
+                            <td data-i18n="hybrid.kw_desc">
+                                通过 PostgreSQL tsvector + pg_trgm 进行全文搜索
                             </td>
                         </tr>
                         <tr>
@@ -617,11 +692,11 @@
                                         background: var(--green);
                                     "
                                 ></span>
-                                Graph Traversal
+                                <span data-i18n="hybrid.graph">图谱遍历</span>
                             </td>
                             <td><strong>20%</strong></td>
-                            <td>
-                                Entity-relationship proximity in knowledge graph
+                            <td data-i18n="hybrid.graph_desc">
+                                知识图谱中的实体关系邻近度
                             </td>
                         </tr>
                         <tr>
@@ -633,12 +708,11 @@
                                         background: var(--orange);
                                     "
                                 ></span>
-                                Time Decay
+                                <span data-i18n="hybrid.time">时间衰减</span>
                             </td>
                             <td><strong>15%</strong></td>
-                            <td>
-                                Recent and frequently-accessed memories rank
-                                higher
+                            <td data-i18n="hybrid.time_desc">
+                                近期和频繁访问的记忆排名更高
                             </td>
                         </tr>
                         <tr>
@@ -647,97 +721,101 @@
                                     class="bar"
                                     style="width: 30px; background: var(--red)"
                                 ></span>
-                                Importance
+                                <span data-i18n="hybrid.imp">重要性</span>
                             </td>
                             <td><strong>10%</strong></td>
-                            <td>LLM-assigned significance score (0.0–1.0)</td>
+                            <td data-i18n="hybrid.imp_desc">
+                                LLM 分配的显著性评分（0.0–1.0）
+                            </td>
                         </tr>
                     </tbody>
                 </table>
             </div>
         </section>
 
-        <!-- ── Memory Lifecycle ── -->
+        <!-- LIFECYCLE -->
         <section>
-            <div class="section-label">Memory Lifecycle</div>
-            <h2>From Raw Input to Archived Knowledge</h2>
+            <div class="section-label" data-i18n="life.label">记忆生命周期</div>
+            <h2 data-i18n="life.title">从原始输入到归档知识</h2>
             <div class="steps">
                 <div class="step">
                     <div class="num">0</div>
-                    <div class="name">Raw Event</div>
-                    <div class="desc">Unprocessed input</div>
+                    <div class="name" data-i18n="life.l0">原始事件</div>
+                    <div class="desc" data-i18n="life.l0d">未经处理的输入</div>
                 </div>
                 <div class="step-arrow">→</div>
                 <div class="step">
                     <div class="num">1</div>
-                    <div class="name">Episode</div>
-                    <div class="desc">Narrative summary</div>
+                    <div class="name" data-i18n="life.l1">情节</div>
+                    <div class="desc" data-i18n="life.l1d">叙事摘要</div>
                 </div>
                 <div class="step-arrow">→</div>
                 <div class="step">
                     <div class="num">2</div>
-                    <div class="name">Fact</div>
-                    <div class="desc">Atomic statement</div>
+                    <div class="name" data-i18n="life.l2">事实</div>
+                    <div class="desc" data-i18n="life.l2d">原子陈述</div>
                 </div>
                 <div class="step-arrow">→</div>
                 <div class="step">
                     <div class="num">3</div>
-                    <div class="name">Preference</div>
-                    <div class="desc">User likes & choices</div>
+                    <div class="name" data-i18n="life.l3">偏好</div>
+                    <div class="desc" data-i18n="life.l3d">用户喜好和选择</div>
                 </div>
                 <div class="step-arrow">→</div>
                 <div class="step">
                     <div class="num">4</div>
-                    <div class="name">Personality</div>
-                    <div class="desc">Stable trait</div>
+                    <div class="name" data-i18n="life.l4">性格</div>
+                    <div class="desc" data-i18n="life.l4d">稳定特征</div>
                 </div>
                 <div class="step-arrow">→</div>
                 <div class="step">
                     <div class="num">5</div>
-                    <div class="name">Knowledge</div>
-                    <div class="desc">Cross-domain info</div>
+                    <div class="name" data-i18n="life.l5">知识</div>
+                    <div class="desc" data-i18n="life.l5d">跨领域信息</div>
                 </div>
                 <div class="step-arrow">→</div>
                 <div class="step">
                     <div class="num">6</div>
-                    <div class="name">Archive</div>
-                    <div class="desc">Cold storage</div>
+                    <div class="name" data-i18n="life.l6">归档</div>
+                    <div class="desc" data-i18n="life.l6d">冷存储</div>
                 </div>
             </div>
         </section>
 
-        <!-- ── Quick Start ── -->
+        <!-- QUICK START -->
         <section id="quickstart">
-            <div class="section-label">Quick Start</div>
-            <h2>Get Running in 30 Seconds</h2>
+            <div class="section-label" data-i18n="qs.label">快速开始</div>
+            <h2 data-i18n="qs.title">30 秒部署运行</h2>
             <div class="code-block">
                 <span class="lang">Shell</span>
-                <span class="cmt"># Clone the repo</span><br />
+                <span class="cmt" data-i18n="qs.c1"># 克隆仓库</span><br />
                 <span class="fn">git</span> clone
                 https://github.com/Bronsan/Agent-MemoryOS.git<br />
                 <span class="fn">cd</span> memory-core<br /><br />
-                <span class="cmt"># Configure</span><br />
+                <span class="cmt" data-i18n="qs.c2"># 配置环境</span><br />
                 <span class="fn">cp</span> .env.example .env<br />
                 <span class="fn">openssl</span> rand -base64 64
-                <span class="cmt"># Generate JWT secret, paste into .env</span
+                <span class="cmt" data-i18n="qs.c3"
+                    ># 生成 JWT 密钥，粘贴到 .env 中</span
                 ><br /><br />
-                <span class="cmt"
-                    ># One-command Docker setup (PostgreSQL + Redis + Memory
-                    Core)</span
+                <span class="cmt" data-i18n="qs.c4"
+                    ># Docker 一键部署（PostgreSQL + Redis + Memory Core）</span
                 ><br />
                 <span class="fn">make</span> docker-up<br /><br />
-                <span class="cmt"># Verify</span><br />
+                <span class="cmt" data-i18n="qs.c5"># 验证服务</span><br />
                 <span class="fn">curl</span> http://localhost:8080/health<br />
                 <span class="str"># → {"status":"ok"}</span>
             </div>
         </section>
 
-        <!-- ── API Examples ── -->
+        <!-- API -->
         <section id="api">
             <div class="section-label">API</div>
-            <h2>Ingest &amp; Search in Two Calls</h2>
+            <h2 data-i18n="api.title">两步完成摄入与检索</h2>
 
-            <h3 style="margin-top: 32px">📥 Ingest a Memory</h3>
+            <h3 style="margin-top: 32px">
+                📥 <span data-i18n="api.ingest_title">摄入记忆</span>
+            </h3>
             <div class="code-block">
                 <span class="lang">cURL</span>
                 <span class="fn">curl</span> -X POST
@@ -752,8 +830,11 @@
                     >'{<br />
                     &nbsp;&nbsp;&nbsp;&nbsp;"user_id":
                     "550e8400-e29b-41d4-a716-446655440000",<br />
-                    &nbsp;&nbsp;&nbsp;&nbsp;"text": "Today I discussed the Q3
-                    roadmap with Alice.",<br />
+                    &nbsp;&nbsp;&nbsp;&nbsp;"text": "<span
+                        data-i18n="api.ingest_text"
+                        >今天和 Alice 讨论了 Q3 路线图，决定优先推进 Android
+                        客户端。</span
+                    >",<br />
                     &nbsp;&nbsp;&nbsp;&nbsp;"source": "web"<br />
                     &nbsp;&nbsp;}'</span
                 ><br /><br />
@@ -763,7 +844,9 @@
                 >
             </div>
 
-            <h3 style="margin-top: 32px">🔍 Hybrid Search</h3>
+            <h3 style="margin-top: 32px">
+                🔍 <span data-i18n="api.search_title">混合检索</span>
+            </h3>
             <div class="code-block">
                 <span class="lang">cURL</span>
                 <span class="fn">curl</span> -X POST
@@ -778,7 +861,10 @@
                     >'{<br />
                     &nbsp;&nbsp;&nbsp;&nbsp;"user_id":
                     "550e8400-e29b-41d4-a716-446655440000",<br />
-                    &nbsp;&nbsp;&nbsp;&nbsp;"query": "Q3 roadmap Alice",<br />
+                    &nbsp;&nbsp;&nbsp;&nbsp;"query": "<span
+                        data-i18n="api.search_query"
+                        >Q3 路线图 Android</span
+                    >",<br />
                     &nbsp;&nbsp;&nbsp;&nbsp;"top_k": 5<br />
                     &nbsp;&nbsp;}'</span
                 ><br /><br />
@@ -799,68 +885,512 @@
                     class="str"
                     >"http://localhost:8080"</span
                 >, <span class="str">"mcos_your_key"</span>)<br /><br />
-                <span class="cmt">// Ingest</span><br />
+                <span class="cmt" data-i18n="api.sdk_c1">// 摄入记忆</span
+                ><br />
                 result, _ := client.<span class="fn">Ingest</span>(ctx,
                 &sdk.IngestInput{<br />
                 &nbsp;&nbsp;UserID: <span class="str">"user-123"</span>,<br />
-                &nbsp;&nbsp;Text:
-                <span class="str">"Remember I prefer dark mode."</span>,<br />
+                &nbsp;&nbsp;Text:&nbsp;&nbsp;
+                <span class="str" data-i18n="api.sdk_text"
+                    >"记住：我在所有应用中偏好深色模式。"</span
+                >,<br />
                 &nbsp;&nbsp;Source: <span class="str">"agent"</span>,<br />
                 })<br /><br />
-                <span class="cmt">// Search</span><br />
+                <span class="cmt" data-i18n="api.sdk_c2">// 搜索记忆</span
+                ><br />
                 search, _ := client.<span class="fn">Search</span>(ctx,
                 &sdk.SearchInput{<br />
                 &nbsp;&nbsp;UserID: <span class="str">"user-123"</span>,<br />
-                &nbsp;&nbsp;Query:
-                <span class="str">"dark mode preference"</span>,<br />
-                &nbsp;&nbsp;TopK: 5,<br />
+                &nbsp;&nbsp;Query:&nbsp;&nbsp;<span
+                    class="str"
+                    data-i18n="api.sdk_search"
+                    >"深色模式偏好"</span
+                >,<br />
+                &nbsp;&nbsp;TopK:&nbsp;&nbsp; 5,<br />
                 })
             </div>
         </section>
 
-        <!-- ── Deploy ── -->
+        <!-- DEPLOY -->
         <section>
-            <div class="section-label">Deploy</div>
-            <h2>Put It Online</h2>
+            <div class="section-label" data-i18n="deploy.label">部署方式</div>
+            <h2 data-i18n="deploy.title">将服务上线</h2>
             <div class="grid">
                 <div class="card">
                     <div class="icon">🐳</div>
-                    <h3>Docker Compose</h3>
-                    <p>
-                        <code>make docker-up</code> starts PostgreSQL
-                        (pgvector), Redis, and Memory Core together. Expose port
-                        8080 behind nginx or a cloud load balancer.
+                    <h3 data-i18n="deploy.docker_title">Docker Compose</h3>
+                    <p data-i18n="deploy.docker_desc">
+                        <code>make docker-up</code> 一键启动
+                        PostgreSQL（pgvector）、Redis 和 Memory Core。在 nginx
+                        或云负载均衡器后暴露 8080 端口。
                     </p>
                 </div>
                 <div class="card">
                     <div class="icon">☁️</div>
-                    <h3>Cloud VM</h3>
-                    <p>
-                        Deploy to any VPS (AWS EC2, DigitalOcean, Hetzner). Add
-                        a domain, set up TLS with Let's Encrypt, and you're
-                        production-ready.
+                    <h3 data-i18n="deploy.cloud_title">云服务器</h3>
+                    <p data-i18n="deploy.cloud_desc">
+                        部署到任意 VPS（AWS
+                        EC2、DigitalOcean、Hetzner）。添加域名，通过 Let's
+                        Encrypt 配置 TLS，即刻投产。
                     </p>
                 </div>
                 <div class="card">
                     <div class="icon">📄</div>
-                    <h3>GitHub Pages (This Site)</h3>
-                    <p>
-                        This landing page lives in <code>/docs</code>. Enable
-                        GitHub Pages in repo Settings → Pages → Source: "Deploy
-                        from a branch" → <code>/docs</code>.
+                    <h3 data-i18n="deploy.gh_title">GitHub Pages（本网站）</h3>
+                    <p data-i18n="deploy.gh_desc">
+                        此落地页位于 <code>/docs</code> 目录。在仓库 Settings →
+                        Pages → Source 中选择 "Deploy from a branch" →
+                        <code>/docs</code> 即可启用。
                     </p>
                 </div>
             </div>
         </section>
 
-        <!-- ── Footer ── -->
         <footer>
             <p>🧠 Agent Memory OS — MIT License</p>
             <p style="margin-top: 8px">
                 <a href="https://github.com/Bronsan/Agent-MemoryOS">GitHub</a>
-                &nbsp;·&nbsp; <a href="README.md">English Docs</a> &nbsp;·&nbsp;
-                <a href="README_CN.md">中文文档</a>
+                &nbsp;·&nbsp;
+                <a
+                    href="https://github.com/Bronsan/Agent-MemoryOS/blob/master/README.md"
+                    >English Docs</a
+                >
+                &nbsp;·&nbsp;
+                <a
+                    href="https://github.com/Bronsan/Agent-MemoryOS/blob/master/README_CN.md"
+                    >中文文档</a
+                >
             </p>
         </footer>
+
+        <script>
+            // ══════════════════════════════════════════
+            // i18n Translation Data
+            // ══════════════════════════════════════════
+            const i18n = {
+                "zh-CN": {
+                    "nav.features": "功能特性",
+                    "nav.architecture": "架构设计",
+                    "nav.api": "API",
+                    "hero.title": "为 AI Agent 打造的<span>长期记忆</span>",
+                    "hero.subtitle":
+                        "一个自托管的、生产级的记忆后端，为 LLM 提供持久化、可搜索、自我演化的记忆能力——集成混合检索、事件溯源和插件生态。",
+                    "hero.cta_github": "⭐ 在 GitHub 上查看",
+                    "hero.cta_start": "快速开始 →",
+                    "arch.label": "架构设计",
+                    "arch.title": "系统架构",
+                    "arch.core_sub": "事件引擎 | 混合检索 | 插件系统",
+                    "feat.label": "核心特性",
+                    "feat.title": "为什么选择 Agent Memory OS？",
+                    "feat.hybrid_title": "混合检索",
+                    "feat.hybrid_desc":
+                        "不止是向量搜索。融合 5 种信号：向量相似度、关键词匹配、知识图谱遍历、时间衰减和重要性评分——加权并由 LLM 重排序。",
+                    "feat.event_title": "事件溯源",
+                    "feat.event_desc":
+                        "每一次状态变更都是不可变的事件。摘要、事实和知识图谱可完全从事件流重建——零数据丢失，完整的审计追踪。",
+                    "feat.async_title": "异步流水线",
+                    "feat.async_desc":
+                        "写入路径延迟 &lt;1ms。后台工作线程处理实体提取、向量嵌入、摘要生成、图谱更新和重要性评分。",
+                    "feat.plugin_title": "插件生态",
+                    "feat.plugin_desc":
+                        "从 Discord、Telegram、QQ、微信、Slack、邮件、GitHub、Obsidian、Notion 等平台采集数据。用简单接口构建自定义插件。",
+                    "feat.sec_title": "安全优先",
+                    "feat.sec_desc":
+                        "参数化查询、JWT + API Key 认证、频率限制、OWASP 安全头、Panic 恢复、错误脱敏、非 root 容器。",
+                    "feat.sdk_title": "Go SDK",
+                    "feat.sdk_desc":
+                        "一流的 Go 客户端：<code>client.Ingest()</code>、<code>client.Search()</code>、<code>client.GetMemory()</code>。几分钟内即可将记忆集成到任何 Go Agent 中。",
+                    "hybrid.label": "混合检索",
+                    "hybrid.title": "5 种信号，1 个分数",
+                    "hybrid.subtitle":
+                        "每个搜索结果通过五种独立检索信号的加权融合进行评分。",
+                    "hybrid.col_signal": "信号",
+                    "hybrid.col_weight": "权重",
+                    "hybrid.col_desc": "工作原理",
+                    "hybrid.vec": "向量相似度",
+                    "hybrid.vec_desc": "通过 pgvector 余弦距离计算语义",
+                    "hybrid.kw": "关键词匹配",
+                    "hybrid.kw_desc":
+                        "通过 PostgreSQL tsvector + pg_trgm 进行全文搜索",
+                    "hybrid.graph": "图谱遍历",
+                    "hybrid.graph_desc": "知识图谱中的实体关系邻近度",
+                    "hybrid.time": "时间衰减",
+                    "hybrid.time_desc": "近期和频繁访问的记忆排名更高",
+                    "hybrid.imp": "重要性",
+                    "hybrid.imp_desc": "LLM 分配的显著性评分（0.0–1.0）",
+                    "life.label": "记忆生命周期",
+                    "life.title": "从原始输入到归档知识",
+                    "life.l0": "原始事件",
+                    "life.l0d": "未经处理的输入",
+                    "life.l1": "情节",
+                    "life.l1d": "叙事摘要",
+                    "life.l2": "事实",
+                    "life.l2d": "原子陈述",
+                    "life.l3": "偏好",
+                    "life.l3d": "用户喜好和选择",
+                    "life.l4": "性格",
+                    "life.l4d": "稳定特征",
+                    "life.l5": "知识",
+                    "life.l5d": "跨领域信息",
+                    "life.l6": "归档",
+                    "life.l6d": "冷存储",
+                    "qs.label": "快速开始",
+                    "qs.title": "30 秒部署运行",
+                    "qs.c1": "# 克隆仓库",
+                    "qs.c2": "# 配置环境",
+                    "qs.c3": "# 生成 JWT 密钥，粘贴到 .env 中",
+                    "qs.c4":
+                        "# Docker 一键部署（PostgreSQL + Redis + Memory Core）",
+                    "qs.c5": "# 验证服务",
+                    "api.title": "两步完成摄入与检索",
+                    "api.ingest_title": "摄入记忆",
+                    "api.ingest_text":
+                        "今天和 Alice 讨论了 Q3 路线图，决定优先推进 Android 客户端。",
+                    "api.search_title": "混合检索",
+                    "api.search_query": "Q3 路线图 Android",
+                    "api.sdk_c1": "// 摄入记忆",
+                    "api.sdk_text": '"记住：我在所有应用中偏好深色模式。"',
+                    "api.sdk_c2": "// 搜索记忆",
+                    "api.sdk_search": '"深色模式偏好"',
+                    "deploy.label": "部署方式",
+                    "deploy.title": "将服务上线",
+                    "deploy.docker_title": "Docker Compose",
+                    "deploy.docker_desc":
+                        "<code>make docker-up</code> 一键启动 PostgreSQL（pgvector）、Redis 和 Memory Core。在 nginx 或云负载均衡器后暴露 8080 端口。",
+                    "deploy.cloud_title": "云服务器",
+                    "deploy.cloud_desc":
+                        "部署到任意 VPS（AWS EC2、DigitalOcean、Hetzner）。添加域名，通过 Let's Encrypt 配置 TLS，即刻投产。",
+                    "deploy.gh_title": "GitHub Pages（本网站）",
+                    "deploy.gh_desc":
+                        '此落地页位于 <code>/docs</code> 目录。在仓库 Settings → Pages → Source 中选择 "Deploy from a branch" → <code>/docs</code> 即可启用。',
+                },
+                en: {
+                    "nav.features": "Features",
+                    "nav.architecture": "Architecture",
+                    "nav.api": "API",
+                    "hero.title":
+                        "Long-Term <span>Memory</span><br>for AI Agents",
+                    "hero.subtitle":
+                        "A self-hosted, production-grade memory backend that gives LLMs persistent, searchable, and self-evolving memory — with hybrid retrieval, event sourcing, and a plugin ecosystem.",
+                    "hero.cta_github": "⭐ View on GitHub",
+                    "hero.cta_start": "Quick Start →",
+                    "arch.label": "Architecture",
+                    "arch.title": "How It Works",
+                    "arch.core_sub":
+                        "Event Engine | Hybrid Retrieval | Plugin System",
+                    "feat.label": "Features",
+                    "feat.title": "Why Agent Memory OS?",
+                    "feat.hybrid_title": "Hybrid Retrieval",
+                    "feat.hybrid_desc":
+                        "Not just vector search. Fuses 5 signals: vector similarity, keyword match, knowledge graph traversal, time decay, and importance scoring — weighted and re-ranked by an LLM.",
+                    "feat.event_title": "Event Sourcing",
+                    "feat.event_desc":
+                        "Every state change is an immutable event. Summaries, facts, and knowledge graphs are fully rebuildable from the event stream — no data loss, full audit trail.",
+                    "feat.async_title": "Async Pipeline",
+                    "feat.async_desc":
+                        "Write path returns in <1ms. Background workers handle entity extraction, embedding generation, summarization, graph updates, and importance scoring.",
+                    "feat.plugin_title": "Plugin Ecosystem",
+                    "feat.plugin_desc":
+                        "Ingest from Discord, Telegram, QQ, WeChat, Slack, Email, GitHub, Obsidian, Notion, and more. Build custom plugins with a simple interface.",
+                    "feat.sec_title": "Security First",
+                    "feat.sec_desc":
+                        "Parameterized queries, JWT + API Key auth, rate limiting, OWASP security headers, panic recovery, error sanitization, and non-root containers.",
+                    "feat.sdk_title": "Go SDK",
+                    "feat.sdk_desc":
+                        "First-class Go client: <code>client.Ingest()</code>, <code>client.Search()</code>, <code>client.GetMemory()</code>. Integrate memory into any Go agent in minutes.",
+                    "hybrid.label": "Hybrid Retrieval",
+                    "hybrid.title": "5 Signals, 1 Score",
+                    "hybrid.subtitle":
+                        "Each search result is scored by a weighted fusion of five independent retrieval signals.",
+                    "hybrid.col_signal": "Signal",
+                    "hybrid.col_weight": "Weight",
+                    "hybrid.col_desc": "How It Works",
+                    "hybrid.vec": "Vector Similarity",
+                    "hybrid.vec_desc":
+                        "Semantic meaning via pgvector cosine distance",
+                    "hybrid.kw": "Keyword Match",
+                    "hybrid.kw_desc":
+                        "Full-text search via PostgreSQL tsvector + pg_trgm",
+                    "hybrid.graph": "Graph Traversal",
+                    "hybrid.graph_desc":
+                        "Entity-relationship proximity in knowledge graph",
+                    "hybrid.time": "Time Decay",
+                    "hybrid.time_desc":
+                        "Recent and frequently-accessed memories rank higher",
+                    "hybrid.imp": "Importance",
+                    "hybrid.imp_desc":
+                        "LLM-assigned significance score (0.0–1.0)",
+                    "life.label": "Memory Lifecycle",
+                    "life.title": "From Raw Input to Archived Knowledge",
+                    "life.l0": "Raw Event",
+                    "life.l0d": "Unprocessed input",
+                    "life.l1": "Episode",
+                    "life.l1d": "Narrative summary",
+                    "life.l2": "Fact",
+                    "life.l2d": "Atomic statement",
+                    "life.l3": "Preference",
+                    "life.l3d": "User likes & choices",
+                    "life.l4": "Personality",
+                    "life.l4d": "Stable trait",
+                    "life.l5": "Knowledge",
+                    "life.l5d": "Cross-domain info",
+                    "life.l6": "Archive",
+                    "life.l6d": "Cold storage",
+                    "qs.label": "Quick Start",
+                    "qs.title": "Get Running in 30 Seconds",
+                    "qs.c1": "# Clone the repo",
+                    "qs.c2": "# Configure",
+                    "qs.c3": "# Generate JWT secret, paste into .env",
+                    "qs.c4":
+                        "# One-command Docker setup (PostgreSQL + Redis + Memory Core)",
+                    "qs.c5": "# Verify",
+                    "api.title": "Ingest & Search in Two Calls",
+                    "api.ingest_title": "Ingest a Memory",
+                    "api.ingest_text":
+                        "Today I discussed the Q3 roadmap with Alice. We decided to prioritize the Android app.",
+                    "api.search_title": "Hybrid Search",
+                    "api.search_query": "Q3 roadmap Android",
+                    "api.sdk_c1": "// Ingest",
+                    "api.sdk_text":
+                        '"Remember I prefer dark mode in all applications."',
+                    "api.sdk_c2": "// Search",
+                    "api.sdk_search": '"dark mode preference"',
+                    "deploy.label": "Deploy",
+                    "deploy.title": "Put It Online",
+                    "deploy.docker_title": "Docker Compose",
+                    "deploy.docker_desc":
+                        "<code>make docker-up</code> starts PostgreSQL (pgvector), Redis, and Memory Core together. Expose port 8080 behind nginx or a cloud load balancer.",
+                    "deploy.cloud_title": "Cloud VM",
+                    "deploy.cloud_desc":
+                        "Deploy to any VPS (AWS EC2, DigitalOcean, Hetzner). Add a domain, set up TLS with Let's Encrypt, and you're production-ready.",
+                    "deploy.gh_title": "GitHub Pages (This Site)",
+                    "deploy.gh_desc":
+                        'This landing page lives in <code>/docs</code>. Enable GitHub Pages in repo Settings → Pages → Source: "Deploy from a branch" → <code>/docs</code>.',
+                },
+                ja: {
+                    "nav.features": "機能",
+                    "nav.architecture": "アーキテクチャ",
+                    "nav.api": "API",
+                    "hero.title": "AIエージェントのための<span>長期記憶</span>",
+                    "hero.subtitle":
+                        "セルフホスト型の本番対応メモリバックエンド。LLMに永続的で検索可能、自己進化する記憶を提供——ハイブリッド検索、イベントソーシング、プラグインエコシステムを統合。",
+                    "hero.cta_github": "⭐ GitHubで見る",
+                    "hero.cta_start": "クイックスタート →",
+                    "arch.label": "アーキテクチャ",
+                    "arch.title": "システム構成",
+                    "arch.core_sub":
+                        "イベントエンジン | ハイブリッド検索 | プラグインシステム",
+                    "feat.label": "主な機能",
+                    "feat.title": "Agent Memory OSを選ぶ理由",
+                    "feat.hybrid_title": "ハイブリッド検索",
+                    "feat.hybrid_desc":
+                        "単なるベクトル検索ではありません。ベクトル類似度、キーワード一致、知識グラフ探索、時間減衰、重要度スコアの5つの信号を融合——重み付けしてLLMで再ランク付けします。",
+                    "feat.event_title": "イベントソーシング",
+                    "feat.event_desc":
+                        "すべての状態変更は不変のイベントです。サマリー、ファクト、知識グラフはイベントストリームから完全に再構築可能——データ損失ゼロ、完全な監査証跡。",
+                    "feat.async_title": "非同期パイプライン",
+                    "feat.async_desc":
+                        "書き込みパスは1ms未満で応答。バックグラウンドワーカーがエンティティ抽出、埋め込み生成、要約、グラフ更新、重要度スコアリングを処理します。",
+                    "feat.plugin_title": "プラグインエコシステム",
+                    "feat.plugin_desc":
+                        "Discord、Telegram、QQ、WeChat、Slack、メール、GitHub、Obsidian、Notionなどからデータを取得。シンプルなインターフェースでカスタムプラグインを構築できます。",
+                    "feat.sec_title": "セキュリティ最優先",
+                    "feat.sec_desc":
+                        "パラメータ化クエリ、JWT + API Key認証、レート制限、OWASPセキュリティヘッダー、パニック復旧、エラーサニタイズ、非rootコンテナ。",
+                    "feat.sdk_title": "Go SDK",
+                    "feat.sdk_desc":
+                        "第一級のGoクライアント：<code>client.Ingest()</code>、<code>client.Search()</code>、<code>client.GetMemory()</code>。数分であらゆるGoエージェントに記憶を統合できます。",
+                    "hybrid.label": "ハイブリッド検索",
+                    "hybrid.title": "5つの信号、1つのスコア",
+                    "hybrid.subtitle":
+                        "各検索結果は5つの独立した検索信号の加重融合によってスコアリングされます。",
+                    "hybrid.col_signal": "信号",
+                    "hybrid.col_weight": "重み",
+                    "hybrid.col_desc": "仕組み",
+                    "hybrid.vec": "ベクトル類似度",
+                    "hybrid.vec_desc": "pgvectorのコサイン距離による意味理解",
+                    "hybrid.kw": "キーワード一致",
+                    "hybrid.kw_desc":
+                        "PostgreSQL tsvector + pg_trgmによる全文検索",
+                    "hybrid.graph": "グラフ探索",
+                    "hybrid.graph_desc":
+                        "知識グラフ内のエンティティ関係の近接度",
+                    "hybrid.time": "時間減衰",
+                    "hybrid.time_desc":
+                        "最近の記憶や頻繁にアクセスされる記憶が上位に",
+                    "hybrid.imp": "重要度",
+                    "hybrid.imp_desc": "LLMが割り当てる重要度スコア（0.0–1.0）",
+                    "life.label": "記憶のライフサイクル",
+                    "life.title": "生の入力からアーカイブ知識へ",
+                    "life.l0": "生イベント",
+                    "life.l0d": "未処理の入力",
+                    "life.l1": "エピソード",
+                    "life.l1d": "物語の要約",
+                    "life.l2": "ファクト",
+                    "life.l2d": "原子的な陳述",
+                    "life.l3": "好み",
+                    "life.l3d": "ユーザーの嗜好と選択",
+                    "life.l4": "性格",
+                    "life.l4d": "安定した特性",
+                    "life.l5": "知識",
+                    "life.l5d": "分野横断的な情報",
+                    "life.l6": "アーカイブ",
+                    "life.l6d": "コールドストレージ",
+                    "qs.label": "クイックスタート",
+                    "qs.title": "30秒で起動",
+                    "qs.c1": "# リポジトリをクローン",
+                    "qs.c2": "# 設定",
+                    "qs.c3": "# JWTシークレットを生成し、.envに貼り付け",
+                    "qs.c4":
+                        "# Dockerワンコマンドセットアップ（PostgreSQL + Redis + Memory Core）",
+                    "qs.c5": "# 動作確認",
+                    "api.title": "2ステップで取り込みと検索",
+                    "api.ingest_title": "記憶の取り込み",
+                    "api.ingest_text":
+                        "今日はAliceとQ3ロードマップについて話し合い、Androidアプリを優先することに決めました。",
+                    "api.search_title": "ハイブリッド検索",
+                    "api.search_query": "Q3 ロードマップ Android",
+                    "api.sdk_c1": "// 記憶の取り込み",
+                    "api.sdk_text":
+                        '"すべてのアプリでダークモードを好むことを覚えておいて。"',
+                    "api.sdk_c2": "// 記憶の検索",
+                    "api.sdk_search": '"ダークモードの好み"',
+                    "deploy.label": "デプロイ",
+                    "deploy.title": "オンラインで公開",
+                    "deploy.docker_title": "Docker Compose",
+                    "deploy.docker_desc":
+                        "<code>make docker-up</code> でPostgreSQL（pgvector）、Redis、Memory Coreを一括起動。nginxまたはクラウドロードバランサーの背後で8080ポートを公開します。",
+                    "deploy.cloud_title": "クラウドVM",
+                    "deploy.cloud_desc":
+                        "任意のVPS（AWS EC2、DigitalOcean、Hetzner）にデプロイ。ドメインを追加し、Let's EncryptでTLSを設定すれば本番対応です。",
+                    "deploy.gh_title": "GitHub Pages（このサイト）",
+                    "deploy.gh_desc":
+                        'このランディングページは<code>/docs</code>にあります。リポジトリのSettings → Pages → Sourceで "Deploy from a branch" → <code>/docs</code> を選択して有効化します。',
+                },
+            };
+
+            // ══════════════════════════════════════════
+            // Language Switcher Logic
+            // ══════════════════════════════════════════
+            const LANG_KEY = "amos_lang";
+
+            function getLang() {
+                const saved = localStorage.getItem(LANG_KEY);
+                if (saved && i18n[saved]) return saved;
+                return "zh-CN"; // default to Chinese
+            }
+
+            function setLang(lang) {
+                localStorage.setItem(LANG_KEY, lang);
+                applyLang(lang);
+                updateLangUI(lang);
+                document
+                    .getElementById("langDropdown")
+                    .classList.remove("show");
+            }
+
+            function applyLang(lang) {
+                const dict = i18n[lang];
+                document.documentElement.lang = lang;
+
+                // Update title
+                const titles = {
+                    "zh-CN": "Agent Memory OS — AI Agent 长期记忆基础设施",
+                    en: "Agent Memory OS — Memory Infrastructure for AI Agents",
+                    ja: "Agent Memory OS — AIエージェント向け長期記憶インフラ",
+                };
+                document.title = titles[lang] || titles["zh-CN"];
+
+                // Update description
+                const descs = {
+                    "zh-CN":
+                        "Agent Memory OS — 面向 LLM 与 AI Agent 的自托管长期记忆基础设施",
+                    en: "Agent Memory OS — Self-hosted long-term memory infrastructure for LLMs and AI Agents",
+                    ja: "Agent Memory OS — LLMとAIエージェント向けのセルフホスト型長期記憶インフラ",
+                };
+                document
+                    .querySelector('meta[name="description"]')
+                    .setAttribute("content", descs[lang] || descs["zh-CN"]);
+
+                // Update all [data-i18n] elements
+                document.querySelectorAll("[data-i18n]").forEach((el) => {
+                    const key = el.getAttribute("data-i18n");
+                    if (dict[key]) {
+                        // For hero.title we need to set innerHTML to preserve <span>
+                        if (key === "hero.title") {
+                            el.innerHTML = dict[key];
+                        } else {
+                            el.textContent = dict[key];
+                        }
+                    }
+                });
+
+                // Update API specific data-i18n text inside code blocks (they have quotes in the data)
+                document
+                    .querySelectorAll('[data-i18n="api.ingest_text"]')
+                    .forEach((el) => {
+                        if (dict["api.ingest_text"])
+                            el.textContent = dict["api.ingest_text"];
+                    });
+                document
+                    .querySelectorAll('[data-i18n="api.search_query"]')
+                    .forEach((el) => {
+                        if (dict["api.search_query"])
+                            el.textContent = dict["api.search_query"];
+                    });
+                document
+                    .querySelectorAll('[data-i18n="api.sdk_text"]')
+                    .forEach((el) => {
+                        if (dict["api.sdk_text"])
+                            el.textContent = dict["api.sdk_text"];
+                    });
+                document
+                    .querySelectorAll('[data-i18n="api.sdk_search"]')
+                    .forEach((el) => {
+                        if (dict["api.sdk_search"])
+                            el.textContent = dict["api.sdk_search"];
+                    });
+            }
+
+            function updateLangUI(lang) {
+                const flags = { "zh-CN": "🇨🇳", en: "🇺🇸", ja: "🇯🇵" };
+                const labels = { "zh-CN": "中文", en: "English", ja: "日本語" };
+                document.getElementById("langFlag").textContent =
+                    flags[lang] || "🇨🇳";
+                document.getElementById("langLabel").textContent =
+                    labels[lang] || "中文";
+
+                document
+                    .querySelectorAll(".lang-dropdown button")
+                    .forEach((btn) => {
+                        btn.classList.toggle(
+                            "active",
+                            btn.getAttribute("data-lang") === lang,
+                        );
+                    });
+            }
+
+            function toggleLang() {
+                document
+                    .getElementById("langDropdown")
+                    .classList.toggle("show");
+            }
+
+            // Close dropdown when clicking outside
+            document.addEventListener("click", function (e) {
+                const dd = document.getElementById("langDropdown");
+                const btn = document.getElementById("langBtn");
+                if (!btn.contains(e.target) && !dd.contains(e.target)) {
+                    dd.classList.remove("show");
+                }
+            });
+
+            // ══════════════════════════════════════════
+            // Initialize
+            // ══════════════════════════════════════════
+            const currentLang = getLang();
+            applyLang(currentLang);
+            updateLangUI(currentLang);
+        </script>
     </body>
 </html>
