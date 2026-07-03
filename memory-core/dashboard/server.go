@@ -83,19 +83,20 @@ func (s *Server) registerRoutes() {
 
 	fileServer := http.FileServer(http.FS(staticSub))
 
-	// Route: exact /admin → redirect to /admin/
-	s.mux.HandleFunc("/admin", func(w http.ResponseWriter, r *http.Request) {
-		http.Redirect(w, r, "/admin/", http.StatusMovedPermanently)
-	})
-
-	// Route: /admin/* → SPA + API (Go 1.22 trailing slash matches subtree)
+	// Single handler for /admin and /admin/* — no redirects, no loops
 	s.mux.HandleFunc("/admin/", func(w http.ResponseWriter, r *http.Request) {
 		// API routes take priority
 		if strings.HasPrefix(r.URL.Path, "/admin/api/") {
 			s.handleAPI(w, r)
 			return
 		}
-		// SPA: serve index.html for all non-API paths
+		// SPA: always serve index.html
+		r.URL.Path = "/index.html"
+		fileServer.ServeHTTP(w, r)
+	})
+
+	// Also catch bare /admin (without trailing slash)
+	s.mux.HandleFunc("/admin", func(w http.ResponseWriter, r *http.Request) {
 		r.URL.Path = "/index.html"
 		fileServer.ServeHTTP(w, r)
 	})
