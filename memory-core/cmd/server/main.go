@@ -14,9 +14,11 @@ import (
 	"github.com/agent-memoryos/memory-core/api"
 	"github.com/agent-memoryos/memory-core/auth"
 	"github.com/agent-memoryos/memory-core/config"
+	"github.com/agent-memoryos/memory-core/dashboard"
 	"github.com/agent-memoryos/memory-core/embedding"
 	"github.com/agent-memoryos/memory-core/event"
 	"github.com/agent-memoryos/memory-core/graph"
+	"github.com/agent-memoryos/memory-core/plugins"
 	"github.com/agent-memoryos/memory-core/provider"
 	"github.com/agent-memoryos/memory-core/retrieval"
 	"github.com/agent-memoryos/memory-core/storage"
@@ -88,6 +90,21 @@ func main() {
 
 	// Hybrid Retrieval engine
 	retrievalEngine := retrieval.NewEngine(postgres, redisCache, embEngine, graphEngine)
+
+	// Plugin registry
+	pluginRegistry := plugins.NewRegistry(eventEngine)
+
+	// --- Start Dashboard (WebUI admin panel) ---
+	if cfg.Dashboard.Enabled {
+		dashSrv := dashboard.NewServer(eventEngine, retrievalEngine, postgres, pluginRegistry, cfg)
+		go func() {
+			log.Printf("Dashboard: http://localhost:%d/admin  (user: %s)",
+				cfg.Dashboard.Port, cfg.Dashboard.Username)
+			if err := dashSrv.ListenAndServe(); err != nil {
+				log.Printf("Dashboard server error: %v", err)
+			}
+		}()
+	}
 
 	// --- Wire Async Pipeline ---
 	// TODO: Connect scheduler.WorkerPool with event handlers

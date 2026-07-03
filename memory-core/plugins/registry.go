@@ -115,6 +115,45 @@ func (r *Registry) List() []string {
 	return names
 }
 
+// Get returns a registered plugin by name, or nil if not found.
+func (r *Registry) Get(name string) SourcePlugin {
+	r.mu.RLock()
+	defer r.mu.RUnlock()
+	return r.plugins[name]
+}
+
+// Start starts a single registered plugin by name.
+func (r *Registry) Start(ctx context.Context, name string) error {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+
+	plugin, exists := r.plugins[name]
+	if !exists {
+		return fmt.Errorf("plugin %s not found", name)
+	}
+	if err := plugin.Start(ctx); err != nil {
+		return fmt.Errorf("plugin %s start: %w", name, err)
+	}
+	log.Printf("plugin started: %s", name)
+	return nil
+}
+
+// Stop stops a single registered plugin by name.
+func (r *Registry) Stop(name string) error {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+
+	plugin, exists := r.plugins[name]
+	if !exists {
+		return fmt.Errorf("plugin %s not found", name)
+	}
+	if err := plugin.Stop(); err != nil {
+		return fmt.Errorf("plugin %s stop: %w", name, err)
+	}
+	log.Printf("plugin stopped: %s", name)
+	return nil
+}
+
 // IngestToEvent is a helper that plugins use to convert external data into events.
 func IngestToEvent(
 	ctx context.Context,

@@ -22,6 +22,7 @@ type Config struct {
 	Auth      AuthConfig
 	Security  SecurityConfig
 	Plugins   PluginsConfig
+	Dashboard DashboardConfig
 }
 
 // ServerConfig defines HTTP/gRPC server settings.
@@ -148,6 +149,14 @@ type PluginsConfig struct {
 	Disabled []string `env:"PLUGINS_DISABLED"`
 }
 
+// DashboardConfig defines the admin dashboard settings.
+type DashboardConfig struct {
+	Enabled  bool   `env:"DASHBOARD_ENABLED" default:"true"`
+	Port     int    `env:"DASHBOARD_PORT" default:"9091"`
+	Username string `env:"DASHBOARD_USER" default:"admin"`
+	Password string `env:"DASHBOARD_PASSWORD" default:"admin"`
+}
+
 // Load reads configuration from environment variables.
 func Load() (*Config, error) {
 	cfg := &Config{}
@@ -246,6 +255,13 @@ func Load() (*Config, error) {
 		Dir:      getEnv("PLUGINS_DIR", "./plugins"),
 		Enabled:  parseStringSlice(getEnv("PLUGINS_ENABLED", "")),
 		Disabled: parseStringSlice(getEnv("PLUGINS_DISABLED", "")),
+	}
+
+	cfg.Dashboard = DashboardConfig{
+		Enabled:  getEnvBool("DASHBOARD_ENABLED", true),
+		Port:     getEnvInt("DASHBOARD_PORT", 9091),
+		Username: getEnv("DASHBOARD_USER", "admin"),
+		Password: getEnv("DASHBOARD_PASSWORD", "admin"),
 	}
 
 	return cfg, nil

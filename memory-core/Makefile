@@ -1,4 +1,4 @@
-.PHONY: build run test clean migrate lint deps
+.PHONY: build run test clean migrate lint deps build-all
 
 # Build the memory-core binary
 build:
@@ -50,9 +50,11 @@ proto:
 dev:
 	air
 
-# Build for multiple platforms
+# Build for multiple platforms (static, stripped binaries)
 build-all:
-	GOOS=linux GOARCH=amd64 go build -o bin/memory-core-linux-amd64 ./cmd/server
-	GOOS=darwin GOARCH=amd64 go build -o bin/memory-core-darwin-amd64 ./cmd/server
-	GOOS=darwin GOARCH=arm64 go build -o bin/memory-core-darwin-arm64 ./cmd/server
-	GOOS=windows GOARCH=amd64 go build -o bin/memory-core-windows-amd64.exe ./cmd/server
+	CGO_ENABLED=0 GOOS=windows GOARCH=amd64 go build -trimpath -ldflags="-s -w" -o bin/memory-core-windows-amd64.exe ./cmd/server/
+	CGO_ENABLED=0 GOOS=darwin GOARCH=amd64 go build -trimpath -ldflags="-s -w" -o bin/memory-core-darwin-amd64 ./cmd/server/
+	CGO_ENABLED=0 GOOS=darwin GOARCH=arm64 go build -trimpath -ldflags="-s -w" -o bin/memory-core-darwin-arm64 ./cmd/server/
+	CGO_ENABLED=0 GOOS=linux GOARCH=arm64 go build -trimpath -ldflags="-s -w" -o bin/memory-core-android-arm64 ./cmd/server/
+	@echo "Binaries built in bin/"
+	@ls -lh bin/
